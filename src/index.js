@@ -3,7 +3,7 @@ import { connect } from "cloudflare:sockets";
 let password = 'auto';
 
 //Find proxyIP : https://github.com/NiREvil/vless/blob/main/sub/ProxyIP.md
-let proxyIP = ['bpb.radically.pro'];
+let proxyIP = ['nima.nscl.ir'];
 
 let addresses = [
     	//  any Domain or clean IPv4/IPv6 addresses from cloudflare is usable, When sub is empty, the local preferred domain name/preferred IP is enabled. If the port number is not provided, the default TLS port is 443, and the alias after the # sign is a remark
