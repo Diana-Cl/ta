@@ -2,557 +2,557 @@ import { connect } from "cloudflare:sockets";
 
 let password = '';
 let proxyIP = '';
-let sub = ''; 
-let subConverter = 'SUBAPI.fxxk.dedyn.io';// clash订阅转换后端，目前使用CM的订阅转换功能。自带虚假节点信息防泄露
-let subConfig = "https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/config/ACL4SSR_Online_Mini_MultiMode.ini"; //订阅配置文件
+let sub = '';
+let subConverter = 'SUBAPI.fxxk.dedyn.io'; // Clash subscription conversion backend, currently using CM's subscription conversion function. Includes fake node information to prevent leakage.
+let subConfig = "https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/config/ACL4SSR_Online_Mini_MultiMode.ini"; // Subscription configuration file
 let subProtocol = 'https';
 let subEmoji = 'true';
 let socks5Address = '';
-let parsedSocks5Address = {}; 
+let parsedSocks5Address = {};
 let enableSocks = false;
 
-let fakeUserID ;
-let fakeHostName ;
-const expire = 4102329600;//2099-12-31
-let proxyIPs ;
+let fakeUserID;
+let fakeHostName;
+const expire = 4102329600; // 2099-12-31
+let proxyIPs;
 let socks5s;
 let go2Socks5s = [
-	'*ttvnw.net',
-	'*tapecontent.net',
-	'*cloudatacdn.com',
-	'*.loadshare.org',
+    '*ttvnw.net',
+    '*tapecontent.net',
+    '*cloudatacdn.com',
+    '*.loadshare.org',
 ];
 let addresses = [];
 let addressesapi = [];
 let addressescsv = [];
 let DLS = 8;
-let remarkIndex = 1;//CSV备注所在列偏移量
+let remarkIndex = 1; // Offset of the CSV comment column
 let FileName = 'epeius';
-let BotToken ='';
-let ChatID =''; 
+let BotToken = '';
+let ChatID = '';
 let proxyhosts = [];
 let proxyhostsURL = '';
 let RproxyIP = 'false';
-let httpsPorts = ["2053","2083","2087","2096","8443"];
-let sha224Password ;
+let httpsPorts = ["2053", "2083", "2087", "2096", "8443"];
+let sha224Password;
 const regex = /^(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}|\[.*\]):?(\d+)?#?(.*)?$/;
 let proxyIPPool = [];
 let path = '/?ed=2560';
 export default {
-	async fetch(request, env, ctx) {
-		try {
-			const UA = request.headers.get('User-Agent') || 'null';
-			const userAgent = UA.toLowerCase();
-			password = env.PASSWORD || env.pswd || env.UUID || env.uuid || password;
-			if (!password) {
-				return new Response('请设置你的PASSWORD变量，或尝试重试部署，检查变量是否生效？', { 
-					status: 404,
-					headers: {
-						"Content-Type": "text/plain;charset=utf-8",
-					}
-				});
-			}
-			sha224Password = env.SHA224 || env.SHA224PASS || sha224(password);
-			//console.log(sha224Password);
+    async fetch(request, env, ctx) {
+        try {
+            const UA = request.headers.get('User-Agent') || 'null';
+            const userAgent = UA.toLowerCase();
+            password = env.PASSWORD || env.pswd || env.UUID || env.uuid || password;
+            if (!password) {
+                return new Response('Please set your PASSWORD variable, or try redeploying and check if the variable is effective?', {
+                    status: 404,
+                    headers: {
+                        "Content-Type": "text/plain;charset=utf-8",
+                    }
+                });
+            }
+            sha224Password = env.SHA224 || env.SHA224PASS || sha224(password);
+            //console.log(sha224Password);
 
-			const currentDate = new Date();
-			currentDate.setHours(0, 0, 0, 0); // 设置时间为当天
-			const timestamp = Math.ceil(currentDate.getTime() / 1000);
-			const fakeUserIDMD5 = await MD5MD5(`${password}${timestamp}`);
-			fakeUserID = [
-				fakeUserIDMD5.slice(0, 8),
-				fakeUserIDMD5.slice(8, 12),
-				fakeUserIDMD5.slice(12, 16),
-				fakeUserIDMD5.slice(16, 20),
-				fakeUserIDMD5.slice(20)
-			].join('-');
-			
-			fakeHostName = `${fakeUserIDMD5.slice(6, 9)}.${fakeUserIDMD5.slice(13, 19)}`;
-			
-			proxyIP = env.PROXYIP || env.proxyip || proxyIP;
-			proxyIPs = await ADD(proxyIP);
-			proxyIP = proxyIPs[Math.floor(Math.random() * proxyIPs.length)];
+            const currentDate = new Date();
+            currentDate.setHours(0, 0, 0, 0); // Set time to today
+            const timestamp = Math.ceil(currentDate.getTime() / 1000);
+            const fakeUserIDMD5 = await MD5MD5(`${password}${timestamp}`);
+            fakeUserID = [
+                fakeUserIDMD5.slice(0, 8),
+                fakeUserIDMD5.slice(8, 12),
+                fakeUserIDMD5.slice(12, 16),
+                fakeUserIDMD5.slice(16, 20),
+                fakeUserIDMD5.slice(20)
+            ].join('-');
 
-			socks5Address = env.SOCKS5 || socks5Address;
-			socks5s = await ADD(socks5Address);
-			socks5Address = socks5s[Math.floor(Math.random() * socks5s.length)];
-			socks5Address = socks5Address.split('//')[1] || socks5Address;
-			if (env.GO2SOCKS5) go2Socks5s = await ADD(env.GO2SOCKS5);
-			if (env.CFPORTS) httpsPorts = await ADD(env.CFPORTS);
+            fakeHostName = `${fakeUserIDMD5.slice(6, 9)}.${fakeUserIDMD5.slice(13, 19)}`;
 
-			if (socks5Address) {
-				try {
-					parsedSocks5Address = socks5AddressParser(socks5Address);
-					RproxyIP = env.RPROXYIP || 'false';
-					enableSocks = true;
-				} catch (err) {
-  					/** @type {Error} */ 
-					let e = err;
-					console.log(e.toString());
-					RproxyIP = env.RPROXYIP || !proxyIP ? 'true' : 'false';
-					enableSocks = false;
-				}
-			} else {
-				RproxyIP = env.RPROXYIP || !proxyIP ? 'true' : 'false';
-			}
+            proxyIP = env.PROXYIP || env.proxyip || proxyIP;
+            proxyIPs = await ADD(proxyIP);
+            proxyIP = proxyIPs[Math.floor(Math.random() * proxyIPs.length)];
 
-			const upgradeHeader = request.headers.get("Upgrade");
-			const url = new URL(request.url);
-			if (!upgradeHeader || upgradeHeader !== "websocket") {
-				if (env.ADD) addresses = await ADD(env.ADD);
-				if (env.ADDAPI) addressesapi = await ADD(env.ADDAPI);
-				if (env.ADDCSV) addressescsv = await ADD(env.ADDCSV);
-				DLS = Number(env.DLS) || DLS;
-				remarkIndex = Number(env.CSVREMARK) || remarkIndex;
-				BotToken = env.TGTOKEN || BotToken;
-				ChatID = env.TGID || ChatID; 
-				FileName = env.SUBNAME || FileName;
-				subEmoji = env.SUBEMOJI || env.EMOJI || subEmoji;
-				if(subEmoji == '0') subEmoji = 'false';
+            socks5Address = env.SOCKS5 || socks5Address;
+            socks5s = await ADD(socks5Address);
+            socks5Address = socks5s[Math.floor(Math.random() * socks5s.length)];
+            socks5Address = socks5Address.split('//')[1] || socks5Address;
+            if (env.GO2SOCKS5) go2Socks5s = await ADD(env.GO2SOCKS5);
+            if (env.CFPORTS) httpsPorts = await ADD(env.CFPORTS);
 
-				sub = env.SUB || sub;
-				subConverter = env.SUBAPI || subConverter;
-				if (subConverter.includes("http://") ){
-					subConverter = subConverter.split("//")[1];
-					subProtocol = 'http';
-				} else {
-					subConverter = subConverter.split("//")[1] || subConverter;
-				}
-				subConfig = env.SUBCONFIG || subConfig;
-				if (url.searchParams.has('sub') && url.searchParams.get('sub') !== '') sub = url.searchParams.get('sub');
+            if (socks5Address) {
+                try {
+                    parsedSocks5Address = socks5AddressParser(socks5Address);
+                    RproxyIP = env.RPROXYIP || 'false';
+                    enableSocks = true;
+                } catch (err) {
+                    /** @type {Error} */
+                    let e = err;
+                    console.log(e.toString());
+                    RproxyIP = env.RPROXYIP || !proxyIP ? 'true' : 'false';
+                    enableSocks = false;
+                }
+            } else {
+                RproxyIP = env.RPROXYIP || !proxyIP ? 'true' : 'false';
+            }
 
-				if (url.searchParams.has('proxyip')) {
-					path = `/?ed=2560&proxyip=${url.searchParams.get('proxyip')}`;
-					RproxyIP = 'false';
-				} else if (url.searchParams.has('socks5')) {
-					path = `/?ed=2560&socks5=${url.searchParams.get('socks5')}`;
-					RproxyIP = 'false';
-				} else if (url.searchParams.has('socks')) {
-					path = `/?ed=2560&socks5=${url.searchParams.get('socks')}`;
-					RproxyIP = 'false';
-				}
-				switch (url.pathname) {
-				case '/':
-					if (env.URL302) return Response.redirect(env.URL302, 302);
-					else if (env.URL) return await proxyURL(env.URL, url);
-					else return new Response(JSON.stringify(request.cf, null, 4), {
-						status: 200,
-						headers: {
-							'content-type': 'application/json',
-						},
-					});
-				case `/${fakeUserID}`:
-					const fakeConfig = await get特洛伊Config(password, request.headers.get('Host'), sub, 'CF-Workers-SUB', RproxyIP, url);
-					return new Response(`${fakeConfig}`, { status: 200 });
-				case `/${password}`:
-					await sendMessage(`#获取订阅 ${FileName}`, request.headers.get('CF-Connecting-IP'), `UA: ${UA}</tg-spoiler>\n域名: ${url.hostname}\n<tg-spoiler>入口: ${url.pathname + url.search}</tg-spoiler>`);
-					const 特洛伊Config = await get特洛伊Config(password, request.headers.get('Host'), sub, UA, RproxyIP, url);
-					const now = Date.now();
-					//const timestamp = Math.floor(now / 1000);
-					const today = new Date(now);
-					today.setHours(0, 0, 0, 0);
-					const UD = Math.floor(((now - today.getTime())/86400000) * 24 * 1099511627776 / 2);
-					let pagesSum = UD;
-					let workersSum = UD;
-					let total = 24 * 1099511627776 ;
+            const upgradeHeader = request.headers.get("Upgrade");
+            const url = new URL(request.url);
+            if (!upgradeHeader || upgradeHeader !== "websocket") {
+                if (env.ADD) addresses = await ADD(env.ADD);
+                if (env.ADDAPI) addressesapi = await ADD(env.ADDAPI);
+                if (env.ADDCSV) addressescsv = await ADD(env.ADDCSV);
+                DLS = Number(env.DLS) || DLS;
+                remarkIndex = Number(env.CSVREMARK) || remarkIndex;
+                BotToken = env.TGTOKEN || BotToken;
+                ChatID = env.TGID || ChatID;
+                FileName = env.SUBNAME || FileName;
+                subEmoji = env.SUBEMOJI || env.EMOJI || subEmoji;
+                if (subEmoji == '0') subEmoji = 'false';
 
-					if (userAgent && (userAgent.includes('mozilla') || userAgent.includes('subconverter'))){
-						return new Response(`${特洛伊Config}`, {
-							status: 200,
-							headers: {
-								"Content-Type": "text/plain;charset=utf-8",
-								"Profile-Update-Interval": "6",
-								"Subscription-Userinfo": `upload=${pagesSum}; download=${workersSum}; total=${total}; expire=${expire}`,
-							}
-						});
-					} else {
-						return new Response(`${特洛伊Config}`, {
-							status: 200,
-							headers: {
-								"Content-Disposition": `attachment; filename=${FileName}; filename*=utf-8''${encodeURIComponent(FileName)}`,
-								"Content-Type": "text/plain;charset=utf-8",
-								"Profile-Update-Interval": "6",
-								"Subscription-Userinfo": `upload=${pagesSum}; download=${workersSum}; total=${total}; expire=${expire}`,
-							}
-						});
-					}
-				default:
-					if (env.URL302) return Response.redirect(env.URL302, 302);
-					else if (env.URL) return await proxyURL(env.URL, url);
-					else return new Response('不用怀疑！你PASSWORD就是错的！！！', { status: 404 });
-				}
-			} else {
-				socks5Address = url.searchParams.get('socks5') || socks5Address;
-				if (new RegExp('/socks5=', 'i').test(url.pathname)) socks5Address = url.pathname.split('5=')[1];
-				else if (new RegExp('/socks://', 'i').test(url.pathname) || new RegExp('/socks5://', 'i').test(url.pathname)) {
-					socks5Address = url.pathname.split('://')[1].split('#')[0];
-					if (socks5Address.includes('@')){
-						let userPassword = socks5Address.split('@')[0];
-						const base64Regex = /^(?:[A-Z0-9+/]{4})*(?:[A-Z0-9+/]{2}==|[A-Z0-9+/]{3}=)?$/i;
-						if (base64Regex.test(userPassword) && !userPassword.includes(':')) userPassword = atob(userPassword);
-						socks5Address = `${userPassword}@${socks5Address.split('@')[1]}`;
-					}
-				}
+                sub = env.SUB || sub;
+                subConverter = env.SUBAPI || subConverter;
+                if (subConverter.includes("http://")) {
+                    subConverter = subConverter.split("//")[1];
+                    subProtocol = 'http';
+                } else {
+                    subConverter = subConverter.split("//")[1] || subConverter;
+                }
+                subConfig = env.SUBCONFIG || subConfig;
+                if (url.searchParams.has('sub') && url.searchParams.get('sub') !== '') sub = url.searchParams.get('sub');
 
-				if (socks5Address) {
-					try {
-						parsedSocks5Address = socks5AddressParser(socks5Address);
-						enableSocks = true;
-					} catch (err) {
-						/** @type {Error} */ 
-						let e = err;
-						console.log(e.toString());
-						enableSocks = false;
-					}
-				} else {
-					enableSocks = false;
-				}
+                if (url.searchParams.has('proxyip')) {
+                    path = `/?ed=2560&proxyip=${url.searchParams.get('proxyip')}`;
+                    RproxyIP = 'false';
+                } else if (url.searchParams.has('socks5')) {
+                    path = `/?ed=2560&socks5=${url.searchParams.get('socks5')}`;
+                    RproxyIP = 'false';
+                } else if (url.searchParams.has('socks')) {
+                    path = `/?ed=2560&socks5=${url.searchParams.get('socks')}`;
+                    RproxyIP = 'false';
+                }
+                switch (url.pathname) {
+                    case '/':
+                        if (env.URL302) return Response.redirect(env.URL302, 302);
+                        else if (env.URL) return await proxyURL(env.URL, url);
+                        else return new Response(JSON.stringify(request.cf, null, 4), {
+                            status: 200,
+                            headers: {
+                                'content-type': 'application/json',
+                            },
+                        });
+                    case `/${fakeUserID}`:
+                        const fakeConfig = await get特洛伊Config(password, request.headers.get('Host'), sub, 'CF-Workers-SUB', RproxyIP, url);
+                        return new Response(`${fakeConfig}`, { status: 200 });
+                    case `/${password}`:
+                        await sendMessage(`#Get Subscription ${FileName}`, request.headers.get('CF-Connecting-IP'), `UA: ${UA}</tg-spoiler>\nDomain: ${url.hostname}\n<tg-spoiler>Entry: ${url.pathname + url.search}</tg-spoiler>`);
+                        const 特洛伊Config = await get特洛伊Config(password, request.headers.get('Host'), sub, UA, RproxyIP, url);
+                        const now = Date.now();
+                        //const timestamp = Math.floor(now / 1000);
+                        const today = new Date(now);
+                        today.setHours(0, 0, 0, 0);
+                        const UD = Math.floor(((now - today.getTime()) / 86400000) * 24 * 1099511627776 / 2);
+                        let pagesSum = UD;
+                        let workersSum = UD;
+                        let total = 24 * 1099511627776;
 
-				if (url.searchParams.has('proxyip')){
-					proxyIP = url.searchParams.get('proxyip');
-					enableSocks = false;
-				} else if (new RegExp('/proxyip=', 'i').test(url.pathname)) {
-					proxyIP = url.pathname.toLowerCase().split('/proxyip=')[1];
-					enableSocks = false;
-				} else if (new RegExp('/proxyip.', 'i').test(url.pathname)) {
-					proxyIP = `proxyip.${url.pathname.toLowerCase().split("/proxyip.")[1]}`;
-					enableSocks = false;
-				}
+                        if (userAgent && (userAgent.includes('mozilla') || userAgent.includes('subconverter'))) {
+                            return new Response(`${特洛伊Config}`, {
+                                status: 200,
+                                headers: {
+                                    "Content-Type": "text/plain;charset=utf-8",
+                                    "Profile-Update-Interval": "6",
+                                    "Subscription-Userinfo": `upload=${pagesSum}; download=${workersSum}; total=${total}; expire=${expire}`,
+                                }
+                            });
+                        } else {
+                            return new Response(`${特洛伊Config}`, {
+                                status: 200,
+                                headers: {
+                                    "Content-Disposition": `attachment; filename=${FileName}; filename*=utf-8''${encodeURIComponent(FileName)}`,
+                                    "Content-Type": "text/plain;charset=utf-8",
+                                    "Profile-Update-Interval": "6",
+                                    "Subscription-Userinfo": `upload=${pagesSum}; download=${workersSum}; total=${total}; expire=${expire}`,
+                                }
+                            });
+                        }
+                    default:
+                        if (env.URL302) return Response.redirect(env.URL302, 302);
+                        else if (env.URL) return await proxyURL(env.URL, url);
+                        else return new Response('No doubt! Your PASSWORD is wrong!!!', { status: 404 });
+                }
+            } else {
+                socks5Address = url.searchParams.get('socks5') || socks5Address;
+                if (new RegExp('/socks5=', 'i').test(url.pathname)) socks5Address = url.pathname.split('5=')[1];
+                else if (new RegExp('/socks://', 'i').test(url.pathname) || new RegExp('/socks5://', 'i').test(url.pathname)) {
+                    socks5Address = url.pathname.split('://')[1].split('#')[0];
+                    if (socks5Address.includes('@')) {
+                        let userPassword = socks5Address.split('@')[0];
+                        const base64Regex = /^(?:[A-Z0-9+/]{4})*(?:[A-Z0-9+/]{2}==|[A-Z0-9+/]{3}=)?$/i;
+                        if (base64Regex.test(userPassword) && !userPassword.includes(':')) userPassword = atob(userPassword);
+                        socks5Address = `${userPassword}@${socks5Address.split('@')[1]}`;
+                    }
+                }
 
-				return await 特洛伊OverWSHandler(request);
-			}
-		} catch (err) {
-			let e = err;
-			return new Response(e.toString());
-		}
-	}
+                if (socks5Address) {
+                    try {
+                        parsedSocks5Address = socks5AddressParser(socks5Address);
+                        enableSocks = true;
+                    } catch (err) {
+                        /** @type {Error} */
+                        let e = err;
+                        console.log(e.toString());
+                        enableSocks = false;
+                    }
+                } else {
+                    enableSocks = false;
+                }
+
+                if (url.searchParams.has('proxyip')) {
+                    proxyIP = url.searchParams.get('proxyip');
+                    enableSocks = false;
+                } else if (new RegExp('/proxyip=', 'i').test(url.pathname)) {
+                    proxyIP = url.pathname.toLowerCase().split('/proxyip=')[1];
+                    enableSocks = false;
+                } else if (new RegExp('/proxyip.', 'i').test(url.pathname)) {
+                    proxyIP = `proxyip.${url.pathname.toLowerCase().split("/proxyip.")[1]}`;
+                    enableSocks = false;
+                }
+
+                return await 特洛伊OverWSHandler(request);
+            }
+        } catch (err) {
+            let e = err;
+            return new Response(e.toString());
+        }
+    }
 };
 
 async function 特洛伊OverWSHandler(request) {
-	const webSocketPair = new WebSocketPair();
-	const [client, webSocket] = Object.values(webSocketPair);
-	webSocket.accept();
-	let address = "";
-	let portWithRandomLog = "";
-	const log = (info, event) => {
-		console.log(`[${address}:${portWithRandomLog}] ${info}`, event || "");
-	};
-	const earlyDataHeader = request.headers.get("sec-websocket-protocol") || "";
-	const readableWebSocketStream = makeReadableWebSocketStream(webSocket, earlyDataHeader, log);
-	let remoteSocketWapper = {
-		value: null
-	};
-	let udpStreamWrite = null;
-	readableWebSocketStream.pipeTo(new WritableStream({
-		async write(chunk, controller) {
-			if (udpStreamWrite) {
-				return udpStreamWrite(chunk);
-			}
-			if (remoteSocketWapper.value) {
-				const writer = remoteSocketWapper.value.writable.getWriter();
-				await writer.write(chunk);
-				writer.releaseLock();
-				return;
-			}
-			const {
-				hasError,
-				message,
-				portRemote = 443,
-				addressRemote = "",
-				rawClientData,
-				addressType
-			} = await parse特洛伊Header(chunk);
-			address = addressRemote;
-			portWithRandomLog = `${portRemote}--${Math.random()} tcp`;
-			if (hasError) {
-				throw new Error(message);
-				return;
-			}
-			handleTCPOutBound(remoteSocketWapper, addressRemote, portRemote, rawClientData, webSocket, log, addressType);
-		},
-		close() {
-			log(`readableWebSocketStream is closed`);
-		},
-		abort(reason) {
-			log(`readableWebSocketStream is aborted`, JSON.stringify(reason));
-		}
-	})).catch((err) => {
-		log("readableWebSocketStream pipeTo error", err);
-	});
-	return new Response(null, {
-		status: 101,
-		// @ts-ignore
-		webSocket: client
-	});
+    const webSocketPair = new WebSocketPair();
+    const [client, webSocket] = Object.values(webSocketPair);
+    webSocket.accept();
+    let address = "";
+    let portWithRandomLog = "";
+    const log = (info, event) => {
+        console.log(`[${address}:${portWithRandomLog}] ${info}`, event || "");
+    };
+    const earlyDataHeader = request.headers.get("sec-websocket-protocol") || "";
+    const readableWebSocketStream = makeReadableWebSocketStream(webSocket, earlyDataHeader, log);
+    let remoteSocketWapper = {
+        value: null
+    };
+    let udpStreamWrite = null;
+    readableWebSocketStream.pipeTo(new WritableStream({
+        async write(chunk, controller) {
+            if (udpStreamWrite) {
+                return udpStreamWrite(chunk);
+            }
+            if (remoteSocketWapper.value) {
+                const writer = remoteSocketWapper.value.writable.getWriter();
+                await writer.write(chunk);
+                writer.releaseLock();
+                return;
+            }
+            const {
+                hasError,
+                message,
+                portRemote = 443,
+                addressRemote = "",
+                rawClientData,
+                addressType
+            } = await parse特洛伊Header(chunk);
+            address = addressRemote;
+            portWithRandomLog = `${portRemote}--${Math.random()} tcp`;
+            if (hasError) {
+                throw new Error(message);
+                return;
+            }
+            handleTCPOutBound(remoteSocketWapper, addressRemote, portRemote, rawClientData, webSocket, log, addressType);
+        },
+        close() {
+            log(`readableWebSocketStream is closed`);
+        },
+        abort(reason) {
+            log(`readableWebSocketStream is aborted`, JSON.stringify(reason));
+        }
+    })).catch((err) => {
+        log("readableWebSocketStream pipeTo error", err);
+    });
+    return new Response(null, {
+        status: 101,
+        // @ts-ignore
+        webSocket: client
+    });
 }
 
 async function parse特洛伊Header(buffer) {
-	if (buffer.byteLength < 56) {
-		return {
-			hasError: true,
-			message: "invalid data"
-		};
-	}
-	let crLfIndex = 56;
-	if (new Uint8Array(buffer.slice(56, 57))[0] !== 0x0d || new Uint8Array(buffer.slice(57, 58))[0] !== 0x0a) {
-		return {
-			hasError: true,
-			message: "invalid header format (missing CR LF)"
-		};
-	}
-	const password = new TextDecoder().decode(buffer.slice(0, crLfIndex));
-	if (password !== sha224Password) {
-		return {
-			hasError: true,
-			message: "invalid password"
-		};
-	}
+    if (buffer.byteLength < 56) {
+        return {
+            hasError: true,
+            message: "invalid data"
+        };
+    }
+    let crLfIndex = 56;
+    if (new Uint8Array(buffer.slice(56, 57))[0] !== 0x0d || new Uint8Array(buffer.slice(57, 58))[0] !== 0x0a) {
+        return {
+            hasError: true,
+            message: "invalid header format (missing CR LF)"
+        };
+    }
+    const password = new TextDecoder().decode(buffer.slice(0, crLfIndex));
+    if (password !== sha224Password) {
+        return {
+            hasError: true,
+            message: "invalid password"
+        };
+    }
 
-	const socks5DataBuffer = buffer.slice(crLfIndex + 2);
-	if (socks5DataBuffer.byteLength < 6) {
-		return {
-			hasError: true,
-			message: "invalid SOCKS5 request data"
-		};
-	}
+    const socks5DataBuffer = buffer.slice(crLfIndex + 2);
+    if (socks5DataBuffer.byteLength < 6) {
+        return {
+            hasError: true,
+            message: "invalid SOCKS5 request data"
+        };
+    }
 
-	const view = new DataView(socks5DataBuffer);
-	const cmd = view.getUint8(0);
-	if (cmd !== 1) {
-		return {
-			hasError: true,
-			message: "unsupported command, only TCP (CONNECT) is allowed"
-		};
-	}
+    const view = new DataView(socks5DataBuffer);
+    const cmd = view.getUint8(0);
+    if (cmd !== 1) {
+        return {
+            hasError: true,
+            message: "unsupported command, only TCP (CONNECT) is allowed"
+        };
+    }
 
-	const atype = view.getUint8(1);
-	// 0x01: IPv4 address
-	// 0x03: Domain name
-	// 0x04: IPv6 address
-	let addressLength = 0;
-	let addressIndex = 2;
-	let address = "";
-	switch (atype) {
-	case 1:
-		addressLength = 4;
-		address = new Uint8Array(
-			socks5DataBuffer.slice(addressIndex, addressIndex + addressLength)
-		).join(".");
-		break;
-	case 3:
-		addressLength = new Uint8Array(
-			socks5DataBuffer.slice(addressIndex, addressIndex + 1)
-		)[0];
-		addressIndex += 1;
-		address = new TextDecoder().decode(
-			socks5DataBuffer.slice(addressIndex, addressIndex + addressLength)
-		);
-		break;
-	case 4:
-		addressLength = 16;
-		const dataView = new DataView(socks5DataBuffer.slice(addressIndex, addressIndex + addressLength));
-		const ipv6 = [];
-		for (let i = 0; i < 8; i++) {
-			ipv6.push(dataView.getUint16(i * 2).toString(16));
-		}
-		address = ipv6.join(":");
-		break;
-	default:
-		return {
-			hasError: true,
-			message: `invalid addressType is ${atype}`
-		};
-	}
+    const atype = view.getUint8(1);
+    // 0x01: IPv4 address
+    // 0x03: Domain name
+    // 0x04: IPv6 address
+    let addressLength = 0;
+    let addressIndex = 2;
+    let address = "";
+    switch (atype) {
+        case 1:
+            addressLength = 4;
+            address = new Uint8Array(
+                socks5DataBuffer.slice(addressIndex, addressIndex + addressLength)
+            ).join(".");
+            break;
+        case 3:
+            addressLength = new Uint8Array(
+                socks5DataBuffer.slice(addressIndex, addressIndex + 1)
+            )[0];
+            addressIndex += 1;
+            address = new TextDecoder().decode(
+                socks5DataBuffer.slice(addressIndex, addressIndex + addressLength)
+            );
+            break;
+        case 4:
+            addressLength = 16;
+            const dataView = new DataView(socks5DataBuffer.slice(addressIndex, addressIndex + addressLength));
+            const ipv6 = [];
+            for (let i = 0; i < 8; i++) {
+                ipv6.push(dataView.getUint16(i * 2).toString(16));
+            }
+            address = ipv6.join(":");
+            break;
+        default:
+            return {
+                hasError: true,
+                message: `invalid addressType is ${atype}`
+            };
+    }
 
-	if (!address) {
-		return {
-			hasError: true,
-			message: `address is empty, addressType is ${atype}`
-		};
-	}
+    if (!address) {
+        return {
+            hasError: true,
+            message: `address is empty, addressType is ${atype}`
+        };
+    }
 
-	const portIndex = addressIndex + addressLength;
-	const portBuffer = socks5DataBuffer.slice(portIndex, portIndex + 2);
-	const portRemote = new DataView(portBuffer).getUint16(0);
-	return {
-		hasError: false,
-		addressRemote: address,
-		portRemote,
-		rawClientData: socks5DataBuffer.slice(portIndex + 4),
-		addressType: atype
-	};
+    const portIndex = addressIndex + addressLength;
+    const portBuffer = socks5DataBuffer.slice(portIndex, portIndex + 2);
+    const portRemote = new DataView(portBuffer).getUint16(0);
+    return {
+        hasError: false,
+        addressRemote: address,
+        portRemote,
+        rawClientData: socks5DataBuffer.slice(portIndex + 4),
+        addressType: atype
+    };
 }
 
 async function handleTCPOutBound(remoteSocket, addressRemote, portRemote, rawClientData, webSocket, log, addressType) {
-	async function useSocks5Pattern(address) {
-		if ( go2Socks5s.includes(atob('YWxsIGlu')) || go2Socks5s.includes(atob('Kg==')) ) return true;
-		return go2Socks5s.some(pattern => {
-			let regexPattern = pattern.replace(/\*/g, '.*');
-			let regex = new RegExp(`^${regexPattern}$`, 'i');
-			return regex.test(address);
-		});
-	}
-	async function connectAndWrite(address, port, socks = false) {
-		log(`connected to ${address}:${port}`);
-		//if (/^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?).){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/.test(address)) address = `${atob('d3d3Lg==')}${address}${atob('LmlwLjA5MDIyNy54eXo=')}`;
-		const tcpSocket = socks ? await socks5Connect(addressType, address, port, log)
-		: connect({
-			hostname: address,
-			port
-		});
-		remoteSocket.value = tcpSocket;
-		//log(`connected to ${address}:${port}`);
-		const writer = tcpSocket.writable.getWriter();
-		await writer.write(rawClientData);
-		writer.releaseLock();
-		return tcpSocket;
-	}
-	async function retry() {
-		if (enableSocks) {
-			tcpSocket = await connectAndWrite(addressRemote, portRemote, true);
-		} else {
-			if (!proxyIP || proxyIP == '') {
-				proxyIP = atob('UFJPWFlJUC50cDEuZnh4ay5kZWR5bi5pbw==');
-			} else if (proxyIP.includes(']:')) {
-				portRemote = proxyIP.split(']:')[1] || portRemote;
-				proxyIP = proxyIP.split(']:')[0] || proxyIP;
-			} else if (proxyIP.split(':').length === 2) {
-				portRemote = proxyIP.split(':')[1] || portRemote;
-				proxyIP = proxyIP.split(':')[0] || proxyIP;
-			}
-			if (proxyIP.includes('.tp')) portRemote = proxyIP.split('.tp')[1].split('.')[0] || portRemote;
-			tcpSocket = await connectAndWrite(proxyIP || addressRemote, portRemote);
-		}
-		tcpSocket.closed.catch((error) => {
-			console.log("retry tcpSocket closed error", error);
-		}).finally(() => {
-			safeCloseWebSocket(webSocket);
-		});
-		remoteSocketToWS(tcpSocket, webSocket, null, log);
-	}
-	let useSocks = false;
-	if (go2Socks5s.length > 0 && enableSocks ) useSocks = await useSocks5Pattern(addressRemote);
-	let tcpSocket = await connectAndWrite(addressRemote, portRemote, useSocks);
-	remoteSocketToWS(tcpSocket, webSocket, retry, log);
+    async function useSocks5Pattern(address) {
+        if (go2Socks5s.includes(atob('YWxsIGlu')) || go2Socks5s.includes(atob('Kg=='))) return true;
+        return go2Socks5s.some(pattern => {
+            let regexPattern = pattern.replace(/\*/g, '.*');
+            let regex = new RegExp(`^${regexPattern}$`, 'i');
+            return regex.test(address);
+        });
+    }
+    async function connectAndWrite(address, port, socks = false) {
+        log(`connected to ${address}:${port}`);
+        //if (/^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?).){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/.test(address)) address = `${atob('d3d3Lg==')}${address}${atob('LmlwLjA5MDIyNy54eXo=')}`;
+        const tcpSocket = socks ? await socks5Connect(addressType, address, port, log)
+            : connect({
+                hostname: address,
+                port
+            });
+        remoteSocket.value = tcpSocket;
+        //log(`connected to ${address}:${port}`);
+        const writer = tcpSocket.writable.getWriter();
+        await writer.write(rawClientData);
+        writer.releaseLock();
+        return tcpSocket;
+    }
+    async function retry() {
+        if (enableSocks) {
+            tcpSocket = await connectAndWrite(addressRemote, portRemote, true);
+        } else {
+            if (!proxyIP || proxyIP == '') {
+                proxyIP = atob('UFJPWFlJUC50cDEuZnh4ay5kZWR5bi5pbw==');
+            } else if (proxyIP.includes(']:')) {
+                portRemote = proxyIP.split(']:')[1] || portRemote;
+                proxyIP = proxyIP.split(']:')[0] || proxyIP;
+            } else if (proxyIP.split(':').length === 2) {
+                portRemote = proxyIP.split(':')[1] || portRemote;
+                proxyIP = proxyIP.split(':')[0] || proxyIP;
+            }
+            if (proxyIP.includes('.tp')) portRemote = proxyIP.split('.tp')[1].split('.')[0] || portRemote;
+            tcpSocket = await connectAndWrite(proxyIP || addressRemote, portRemote);
+        }
+        tcpSocket.closed.catch((error) => {
+            console.log("retry tcpSocket closed error", error);
+        }).finally(() => {
+            safeCloseWebSocket(webSocket);
+        });
+        remoteSocketToWS(tcpSocket, webSocket, null, log);
+    }
+    let useSocks = false;
+    if (go2Socks5s.length > 0 && enableSocks) useSocks = await useSocks5Pattern(addressRemote);
+    let tcpSocket = await connectAndWrite(addressRemote, portRemote, useSocks);
+    remoteSocketToWS(tcpSocket, webSocket, retry, log);
 }
 
 function makeReadableWebSocketStream(webSocketServer, earlyDataHeader, log) {
-	let readableStreamCancel = false;
-	const stream = new ReadableStream({
-		start(controller) {
-			webSocketServer.addEventListener("message", (event) => {
-				if (readableStreamCancel) {
-					return;
-				}
-				const message = event.data;
-				controller.enqueue(message);
-			});
-			webSocketServer.addEventListener("close", () => {
-				safeCloseWebSocket(webSocketServer);
-				if (readableStreamCancel) {
-					return;
-				}
-				controller.close();
-			});
-			webSocketServer.addEventListener("error", (err) => {
-				log("webSocketServer error");
-				controller.error(err);
-			});
-			const { earlyData, error } = base64ToArrayBuffer(earlyDataHeader);
-			if (error) {
-				controller.error(error);
-			} else if (earlyData) {
-				controller.enqueue(earlyData);
-			}
-		},
-		pull(controller) {},
-		cancel(reason) {
-			if (readableStreamCancel) {
-				return;
-			}
-			log(`readableStream was canceled, due to ${reason}`);
-			readableStreamCancel = true;
-			safeCloseWebSocket(webSocketServer);
-		}
-	});
-	return stream;
+    let readableStreamCancel = false;
+    const stream = new ReadableStream({
+        start(controller) {
+            webSocketServer.addEventListener("message", (event) => {
+                if (readableStreamCancel) {
+                    return;
+                }
+                const message = event.data;
+                controller.enqueue(message);
+            });
+            webSocketServer.addEventListener("close", () => {
+                safeCloseWebSocket(webSocketServer);
+                if (readableStreamCancel) {
+                    return;
+                }
+                controller.close();
+            });
+            webSocketServer.addEventListener("error", (err) => {
+                log("webSocketServer error");
+                controller.error(err);
+            });
+            const { earlyData, error } = base64ToArrayBuffer(earlyDataHeader);
+            if (error) {
+                controller.error(error);
+            } else if (earlyData) {
+                controller.enqueue(earlyData);
+            }
+        },
+        pull(controller) { },
+        cancel(reason) {
+            if (readableStreamCancel) {
+                return;
+            }
+            log(`readableStream was canceled, due to ${reason}`);
+            readableStreamCancel = true;
+            safeCloseWebSocket(webSocketServer);
+        }
+    });
+    return stream;
 }
 
 async function remoteSocketToWS(remoteSocket, webSocket, retry, log) {
-	let hasIncomingData = false;
-	await remoteSocket.readable.pipeTo(
-		new WritableStream({
-			start() {},
-			/**
-			 *
-			 * @param {Uint8Array} chunk
-			 * @param {*} controller
-			 */
-			async write(chunk, controller) {
-				hasIncomingData = true;
-				if (webSocket.readyState !== WS_READY_STATE_OPEN) {
-					controller.error(
-						"webSocket connection is not open"
-					);
-				}
-				webSocket.send(chunk);
-			},
-			close() {
-				log(`remoteSocket.readable is closed, hasIncomingData: ${hasIncomingData}`);
-			},
-			abort(reason) {
-				console.error("remoteSocket.readable abort", reason);
-			}
-		})
-	).catch((error) => {
-		console.error(
-			`remoteSocketToWS error:`,
-			error.stack || error
-		);
-		safeCloseWebSocket(webSocket);
-	});
-	if (hasIncomingData === false && retry) {
-		log(`retry`);
-		retry();
-	}
+    let hasIncomingData = false;
+    await remoteSocket.readable.pipeTo(
+        new WritableStream({
+            start() { },
+            /**
+             *
+             * @param {Uint8Array} chunk
+             * @param {*} controller
+             */
+            async write(chunk, controller) {
+                hasIncomingData = true;
+                if (webSocket.readyState !== WS_READY_STATE_OPEN) {
+                    controller.error(
+                        "webSocket connection is not open"
+                    );
+                }
+                webSocket.send(chunk);
+            },
+            close() {
+                log(`remoteSocket.readable is closed, hasIncomingData: ${hasIncomingData}`);
+            },
+            abort(reason) {
+                console.error("remoteSocket.readable abort", reason);
+            }
+        })
+    ).catch((error) => {
+        console.error(
+            `remoteSocketToWS error:`,
+            error.stack || error
+        );
+        safeCloseWebSocket(webSocket);
+    });
+    if (hasIncomingData === false && retry) {
+        log(`retry`);
+        retry();
+    }
 }
 /*
 function isValidSHA224(hash) {
-	const sha224Regex = /^[0-9a-f]{56}$/i;
-	return sha224Regex.test(hash);
+    const sha224Regex = /^[0-9a-f]{56}$/i;
+    return sha224Regex.test(hash);
 }
 */
 function base64ToArrayBuffer(base64Str) {
-	if (!base64Str) {
-		return { error: null };
-	}
-	try {
-		base64Str = base64Str.replace(/-/g, "+").replace(/_/g, "/");
-		const decode = atob(base64Str);
-		const arryBuffer = Uint8Array.from(decode, (c) => c.charCodeAt(0));
-		return { earlyData: arryBuffer.buffer, error: null };
-	} catch (error) {
-		return { error };
-	}
+    if (!base64Str) {
+        return { error: null };
+    }
+    try {
+        base64Str = base64Str.replace(/-/g, "+").replace(/_/g, "/");
+        const decode = atob(base64Str);
+        const arryBuffer = Uint8Array.from(decode, (c) => c.charCodeAt(0));
+        return { earlyData: arryBuffer.buffer, error: null };
+    } catch (error) {
+        return { error };
+    }
 }
 
 let WS_READY_STATE_OPEN = 1;
 let WS_READY_STATE_CLOSING = 2;
 
 function safeCloseWebSocket(socket) {
-	try {
-		if (socket.readyState === WS_READY_STATE_OPEN || socket.readyState === WS_READY_STATE_CLOSING) {
-			socket.close();
-		}
-	} catch (error) {
-		console.error("safeCloseWebSocket error", error);
-	}
+    try {
+        if (socket.readyState === WS_READY_STATE_OPEN || socket.readyState === WS_READY_STATE_CLOSING) {
+            socket.close();
+        }
+    } catch (error) {
+        console.error("safeCloseWebSocket error", error);
+    }
 }
 
 /*
 export {
-	worker_default as
-	default
+    worker_default as
+    default
 };
 //# sourceMappingURL=worker.js.map
 */
@@ -758,7 +758,7 @@ async function get特洛伊Config(password, hostName, sub, UA, RproxyIP, _url) {
 
         return `
 ################################################################
-Subscribe / sub subscription address, supports Base64, clash-meta, sing-box subscription formats
+Subscription addresses, supports Base64, clash-meta, sing-box surge
 ---------------------------------------------------------------
 Quick adaptive subscription address:
 https://${proxyhost}${hostName}/${password}
@@ -801,7 +801,7 @@ clash-meta
 ${clash}
 ---------------------------------------------------------------
 ################################################################
-${decodeURIComponent(atob(`dGVsZWdyYW0lMjAlRTQlQkElQTQlRTYlQjUlODElRTclQkUlQTQlMjAlRTYlOEElODAlRTYlOUMlQUYlRTUlQTQlQTclRTQlQkQlQUMlN0UlRTUlOUMlQTglRTclQkElQkYlRTUlOEYlOTElRTclODklOEMhCmh0dHBzJTNBJTJGJTJGdC5tZSUyRkNNTGl1c3NzcwotLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0KZ2l0aHViJTIwJUU5JUExJUI5JUU3JTlCJUFFJUU1JTlDJUIwJUU1JTlEJTgwJTIwU3RhciFTdGFyIVN0YXIhISEKaHR0cHMlM0ElMkYlMkZnaXRodWIuY29tJTJGY21saXUlMkZlcGVpdXMKLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tCiUyMyUyMyUyMyUyMyUyMyUyMyUyMyUyMyUyMyUyMyUyMyUyMyUyMyUyMyUyMyUyMyUyMyUyMyUyMyUyMyUyMyUyMyUyMyUyMyUyMyUyMyUyMyUyMyUyMyUyMyUyMyUyMyUyMyUyMyUyMyUyMyUyMyUyMyUyMyUyMyUyMyUyMyUyMyUyMyUyMyUyMyUyMyUyMyUyMyUyMyUyMyUyMyUyMyUyMyUyMyUyMyUyMyUyMyUyMyUyMyUyMyUyMyUyMyUyMw==`))}
+${decodeURIComponent(atob(`dGVsZWdyYW0gOgpodHRwczovL3QubWUvRl9OaVJFdmlsCi0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLQpnaXRodWI6Cmh0dHBzOi8vZ2l0aHViLmNvbS9OaVJFdmlsL1RyYXVtYQotLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0=`))}
 `;
     } else {
         if (typeof fetch != 'function') {
@@ -1336,13 +1336,13 @@ function surge(content, url) {
 /**
  * [js-sha256]{@link https://github.com/emn178/js-sha256}
  *
- * @version 0.11.0 (modified by cmliu)
+ * @version 0.11.0 (modified by REvil)
  * @description This code is based on the js-sha256 project, with the addition of the SHA-224 hash algorithm implementation.
- * @author Chen, Yi-Cyuan [emn178@gmail.com], modified by cmliu
+ * @author Chen, Yi-Cyuan [emn178@gmail.com]
  * @copyright Chen, Yi-Cyuan 2014-2024
  * @license MIT
  *
- * @modifications Rewrote and implemented the sha224 function. Please cite the source when referencing. Modification date: 2024-12-04, Github: cmliu
+ * @modifications Rewrote and implemented the sha224 function. Please cite the source when referencing. Modification date: 2024-12-04, Github: NiREvil
  */
 function sha224(inputString) {
     // Internal constants and functions
