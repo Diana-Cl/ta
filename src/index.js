@@ -1,4 +1,3 @@
-
 import { connect } from "cloudflare:sockets";
 
 let password = '';
@@ -559,227 +558,227 @@ export {
 */
 
 function revertFakeInfo(content, userID, hostName, isBase64) {
-	if (isBase64) content = atob(content);//Base64解码
-	content = content.replace(new RegExp(fakeUserID, 'g'), userID).replace(new RegExp(fakeHostName, 'g'), hostName);
-	//console.log(content);
-	if (isBase64) content = btoa(content);//Base64编码
+    if (isBase64) content = atob(content); // Base64 decode
+    content = content.replace(new RegExp(fakeUserID, 'g'), userID).replace(new RegExp(fakeHostName, 'g'), hostName);
+    //console.log(content);
+    if (isBase64) content = btoa(content); // Base64 encode
 
-	return content;
+    return content;
 }
 
 async function MD5MD5(text) {
-	const encoder = new TextEncoder();
-  
-	const firstPass = await crypto.subtle.digest('MD5', encoder.encode(text));
-	const firstPassArray = Array.from(new Uint8Array(firstPass));
-	const firstHex = firstPassArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    const encoder = new TextEncoder();
 
-	const secondPass = await crypto.subtle.digest('MD5', encoder.encode(firstHex.slice(7, 27)));
-	const secondPassArray = Array.from(new Uint8Array(secondPass));
-	const secondHex = secondPassArray.map(b => b.toString(16).padStart(2, '0')).join('');
-  
-	return secondHex.toLowerCase();
+    const firstPass = await crypto.subtle.digest('MD5', encoder.encode(text));
+    const firstPassArray = Array.from(new Uint8Array(firstPass));
+    const firstHex = firstPassArray.map(b => b.toString(16).padStart(2, '0')).join('');
+
+    const secondPass = await crypto.subtle.digest('MD5', encoder.encode(firstHex.slice(7, 27)));
+    const secondPassArray = Array.from(new Uint8Array(secondPass));
+    const secondHex = secondPassArray.map(b => b.toString(16).padStart(2, '0')).join('');
+
+    return secondHex.toLowerCase();
 }
 
-async function ADD(内容) {
-	// 将制表符、双引号、单引号和换行符都替换为逗号
-	// 然后将连续的多个逗号替换为单个逗号
-	var 替换后的内容 = 内容.replace(/[	|"'\r\n]+/g, ',').replace(/,+/g, ',');
-	
-	// 删除开头和结尾的逗号（如果有的话）
-	if (替换后的内容.charAt(0) == ',') 替换后的内容 = 替换后的内容.slice(1);
-	if (替换后的内容.charAt(替换后的内容.length - 1) == ',') 替换后的内容 = 替换后的内容.slice(0, 替换后的内容.length - 1);
-	
-	// 使用逗号分割字符串，得到地址数组
-	const 地址数组 = 替换后的内容.split(',');
-	
-	return 地址数组;
+async function ADD(content) {
+    // Replace tabs, double quotes, single quotes, and newline characters with commas
+    // Then replace consecutive commas with a single comma
+    var replacedContent = content.replace(/[	|"'\r\n]+/g, ',').replace(/,+/g, ',');
+
+    // Remove leading and trailing commas (if any)
+    if (replacedContent.charAt(0) == ',') replacedContent = replacedContent.slice(1);
+    if (replacedContent.charAt(replacedContent.length - 1) == ',') replacedContent = replacedContent.slice(0, replacedContent.length - 1);
+
+    // Split the string by commas to get the address array
+    const addressArray = replacedContent.split(',');
+
+    return addressArray;
 }
 
 async function proxyURL(proxyURL, url) {
-	const URLs = await ADD(proxyURL);
-	const fullURL = URLs[Math.floor(Math.random() * URLs.length)];
-	// 解析目标 URL
-	let parsedURL = new URL(fullURL);
-	console.log(parsedURL);
-	// 提取并可能修改 URL 组件
-	let URLProtocol = parsedURL.protocol.slice(0, -1) || 'https';
-	let URLHostname = parsedURL.hostname;
-	let URLPathname = parsedURL.pathname;
-	let URLSearch = parsedURL.search;
-	// 处理 pathname
-	if (URLPathname.charAt(URLPathname.length - 1) == '/') {
-		URLPathname = URLPathname.slice(0, -1);
-	}
-	URLPathname += url.pathname;
-	// 构建新的 URL
-	let newURL = `${URLProtocol}://${URLHostname}${URLPathname}${URLSearch}`;
-	// 反向代理请求
-	let response = await fetch(newURL);
-	// 创建新的响应
-	let newResponse = new Response(response.body, {
-		status: response.status,
-		statusText: response.statusText,
-		headers: response.headers
-	});
-	// 添加自定义头部，包含 URL 信息
-	//newResponse.headers.set('X-Proxied-By', 'Cloudflare Worker');
-	//newResponse.headers.set('X-Original-URL', fullURL);
-	newResponse.headers.set('X-New-URL', newURL);
-	return newResponse;
+    const URLs = await ADD(proxyURL);
+    const fullURL = URLs[Math.floor(Math.random() * URLs.length)];
+    // Parse the target URL
+    let parsedURL = new URL(fullURL);
+    console.log(parsedURL);
+    // Extract and possibly modify URL components
+    let URLProtocol = parsedURL.protocol.slice(0, -1) || 'https';
+    let URLHostname = parsedURL.hostname;
+    let URLPathname = parsedURL.pathname;
+    let URLSearch = parsedURL.search;
+    // Handle pathname
+    if (URLPathname.charAt(URLPathname.length - 1) == '/') {
+        URLPathname = URLPathname.slice(0, -1);
+    }
+    URLPathname += url.pathname;
+    // Build the new URL
+    let newURL = `${URLProtocol}://${URLHostname}${URLPathname}${URLSearch}`;
+    // Reverse proxy request
+    let response = await fetch(newURL);
+    // Create a new response
+    let newResponse = new Response(response.body, {
+        status: response.status,
+        statusText: response.statusText,
+        headers: response.headers
+    });
+    // Add custom headers containing URL information
+    //newResponse.headers.set('X-Proxied-By', 'Cloudflare Worker');
+    //newResponse.headers.set('X-Original-URL', fullURL);
+    newResponse.headers.set('X-New-URL', newURL);
+    return newResponse;
 }
 
-function 配置信息(密码, 域名地址) {
-	const 啥啥啥_写的这是啥啊 = 'dHJvamFu';
-	const 协议类型 = atob(啥啥啥_写的这是啥啊);
-	
-	const 别名 = FileName;
-	let 地址 = 域名地址;
-	let 端口 = 443;
-	
-	const 传输层协议 = 'ws';
-	const 伪装域名 = 域名地址;
-	const 路径 = path;
-	
-	let 传输层安全 = ['tls',true];
-	const SNI = 域名地址;
-	const 指纹 = 'randomized';
-	
-	const v2ray = `${协议类型}://${encodeURIComponent(密码)}@${地址}:${端口}?security=${传输层安全[0]}&sni=${SNI}&alpn=h3&fp=${指纹}&allowInsecure=1&type=${传输层协议}&host=${伪装域名}&path=${encodeURIComponent(路径)}#${encodeURIComponent(别名)}`			  
-	const clash = `- {name: ${别名}, server: ${地址}, port: ${端口}, udp: false, client-fingerprint: ${指纹}, type: ${协议类型}, password: ${密码}, sni: ${SNI}, alpn: [h3], skip-cert-verify: true, network: ${传输层协议}, ws-opts: {path: "${路径}", headers: {Host: ${伪装域名}}}}`;
+function 配置信息(password, domainAddress) {
+    const 啥啥啥_写的这是啥啊 = 'trojan';
+    const protocolType = atob(啥啥啥_写的这是啥啊);
 
-	return [v2ray,clash];
+    const alias = FileName;
+    let address = domainAddress;
+    let port = 443;
+
+    const transportProtocol = 'ws';
+    const disguisedDomain = domainAddress;
+    const path = path;
+
+    let transportSecurity = ['tls', true];
+    const SNI = domainAddress;
+    const fingerprint = 'randomized';
+
+    const v2ray = `${protocolType}://${encodeURIComponent(password)}@${address}:${port}?security=${transportSecurity[0]}&sni=${SNI}&alpn=h3&fp=${fingerprint}&allowInsecure=1&type=${transportProtocol}&host=${disguisedDomain}&path=${encodeURIComponent(path)}#${encodeURIComponent(alias)}`
+    const clash = `- {name: ${alias}, server: ${address}, port: ${port}, udp: false, client-fingerprint: ${fingerprint}, type: ${protocolType}, password: ${password}, sni: ${SNI}, alpn: [h3], skip-cert-verify: true, network: ${transportProtocol}, ws-opts: {path: "${path}", headers: {Host: ${disguisedDomain}}}}`;
+
+    return [v2ray, clash];
 }
 
-let subParams = ['sub','base64','b64','clash','singbox','sb','surge'];
+let subParams = ['sub', 'base64', 'b64', 'clash', 'singbox', 'sb', 'surge'];
 async function get特洛伊Config(password, hostName, sub, UA, RproxyIP, _url) {
-	if (sub) {
-		const match = sub.match(/^(?:https?:\/\/)?([^\/]+)/);
-		if (match) {
-			sub = match[1];
-		}
-		const subs = await ADD(sub);
-		if (subs.length > 1) sub = subs[0];
+    if (sub) {
+        const match = sub.match(/^(?:https?:\/\/)?([^\/]+)/);
+        if (match) {
+            sub = match[1];
+        }
+        const subs = await ADD(sub);
+        if (subs.length > 1) sub = subs[0];
 
-	} else if ((addresses.length + addressesapi.length + addressescsv.length) == 0){
-		// 定义 Cloudflare IP 范围的 CIDR 列表
-		let cfips = [
-			'103.21.244.0/23',
-			'104.16.0.0/13',
-			'104.24.0.0/14',
-			'172.64.0.0/14',
-			'103.21.244.0/23',
-			'104.16.0.0/14',
-			'104.24.0.0/15',
-			'141.101.64.0/19',
-			'172.64.0.0/14',
-			'188.114.96.0/21',
-			'190.93.240.0/21',
-		];
+    } else if ((addresses.length + addressesapi.length + addressescsv.length) == 0) {
+        // Define the CIDR list of Cloudflare IP ranges
+        let cfips = [
+            '103.21.244.0/23',
+            '104.16.0.0/13',
+            '104.24.0.0/14',
+            '172.64.0.0/14',
+            '103.21.244.0/23',
+            '104.16.0.0/14',
+            '104.24.0.0/15',
+            '141.101.64.0/19',
+            '172.64.0.0/14',
+            '188.114.96.0/21',
+            '190.93.240.0/21',
+        ];
 
-		// 生成符合给定 CIDR 范围的随机 IP 地址
-		function generateRandomIPFromCIDR(cidr) {
-			const [base, mask] = cidr.split('/');
-			const baseIP = base.split('.').map(Number);
-			const subnetMask = 32 - parseInt(mask, 10);
-			const maxHosts = Math.pow(2, subnetMask) - 1;
-			const randomHost = Math.floor(Math.random() * maxHosts);
+        // Generate a random IP address within the given CIDR range
+        function generateRandomIPFromCIDR(cidr) {
+            const [base, mask] = cidr.split('/');
+            const baseIP = base.split('.').map(Number);
+            const subnetMask = 32 - parseInt(mask, 10);
+            const maxHosts = Math.pow(2, subnetMask) - 1;
+            const randomHost = Math.floor(Math.random() * maxHosts);
 
-			const randomIP = baseIP.map((octet, index) => {
-				if (index < 2) return octet;
-				if (index === 2) return (octet & (255 << (subnetMask - 8))) + ((randomHost >> 8) & 255);
-				return (octet & (255 << subnetMask)) + (randomHost & 255);
-			});
+            const randomIP = baseIP.map((octet, index) => {
+                if (index < 2) return octet;
+                if (index === 2) return (octet & (255 << (subnetMask - 8))) + ((randomHost >> 8) & 255);
+                return (octet & (255 << subnetMask)) + (randomHost & 255);
+            });
 
-			return randomIP.join('.');
-		}
-		addresses = addresses.concat('127.0.0.1:1234#CFnat');
-		addresses = addresses.concat(cfips.map(cidr => generateRandomIPFromCIDR(cidr) + '#CF随机节点'));
-	}
-	const userAgent = UA.toLowerCase();
-	const Config = 配置信息(password , hostName);
-	const v2ray = Config[0];
-	const clash = Config[1];
-	let proxyhost = "";
-	if(hostName.includes(".workers.dev")){
-		if ( proxyhostsURL && (!proxyhosts || proxyhosts.length == 0)) {
-			try {
-				const response = await fetch(proxyhostsURL); 
-			
-				if (!response.ok) {
-					console.error('获取地址时出错:', response.status, response.statusText);
-					return; // 如果有错误，直接返回
-				}
-			
-				const text = await response.text();
-				const lines = text.split('\n');
-				// 过滤掉空行或只包含空白字符的行
-				const nonEmptyLines = lines.filter(line => line.trim() !== '');
-			
-				proxyhosts = proxyhosts.concat(nonEmptyLines);
-			} catch (error) {
-				//console.error('获取地址时出错:', error);
-			}
-		} 
-		if (proxyhosts.length != 0) proxyhost = proxyhosts[Math.floor(Math.random() * proxyhosts.length)] + "/";
-	}
-	
-	if ( userAgent.includes('mozilla') && !subParams.some(_searchParams => _url.searchParams.has(_searchParams))) {
-		let surge = `Surge订阅地址:\nhttps://${proxyhost}${hostName}/${password}?surge`;
-		if (hostName.includes(".workers.dev")) surge = "Surge订阅必须绑定自定义域";
-		const newSocks5s = socks5s.map(socks5Address => {
-			if (socks5Address.includes('@')) return socks5Address.split('@')[1];
-			else if (socks5Address.includes('//')) return socks5Address.split('//')[1];
-			else return socks5Address;
-		});
+            return randomIP.join('.');
+        }
+        addresses = addresses.concat('127.0.0.1:1234#CFnat');
+        addresses = addresses.concat(cfips.map(cidr => generateRandomIPFromCIDR(cidr) + '#CF随机节点'));
+    }
+    const userAgent = UA.toLowerCase();
+    const Config = 配置信息(password, hostName);
+    const v2ray = Config[0];
+    const clash = Config[1];
+    let proxyhost = "";
+    if (hostName.includes(".workers.dev")) {
+        if (proxyhostsURL && (!proxyhosts || proxyhosts.length == 0)) {
+            try {
+                const response = await fetch(proxyhostsURL);
 
-		let socks5List = '';
-		if (go2Socks5s.length > 0 && enableSocks ) {
-			socks5List = `${decodeURIComponent('SOCKS5%EF%BC%88%E7%99%BD%E5%90%8D%E5%8D%95%EF%BC%89%3A%20')}`;
-			if ( go2Socks5s.includes(atob('YWxsIGlu')) || go2Socks5s.includes(atob('Kg==')) ) socks5List += `${decodeURIComponent('%E6%89%80%E6%9C%89%E6%B5%81%E9%87%8F')}\n`;
-			else socks5List += `\n  ${go2Socks5s.join('\n  ')}\n`;
-		}
+                if (!response.ok) {
+                    console.error('Error fetching addresses:', response.status, response.statusText);
+                    return; // If there is an error, return directly
+                }
 
-		let 订阅器 = '';
-		if (sub) {
-			if (enableSocks) 订阅器 += `CFCDN（访问方式）: Socks5\n  ${newSocks5s.join('\n  ')}\n${socks5List}`;
-			else if (proxyIP && proxyIP != '') 订阅器 += `CFCDN（访问方式）: ProxyIP\n  ${proxyIPs.join('\n  ')}\n`;
-			else if (RproxyIP == 'true') 订阅器 += `CFCDN（访问方式）: 自动获取ProxyIP\n`;
-			else 订阅器 += `CFCDN（访问方式）: 无法访问, 需要您设置 proxyIP/PROXYIP ！！！\n`
-			订阅器 += `\nSUB（优选订阅生成器）: ${sub}`;
-		} else {
-			if (enableSocks) 订阅器 += `CFCDN（访问方式）: Socks5\n  ${newSocks5s.join('\n  ')}\n${socks5List}`;
-			else if (proxyIP && proxyIP != '') 订阅器 += `CFCDN（访问方式）: ProxyIP\n  ${proxyIPs.join('\n  ')}\n`;
-			else 订阅器 += `CFCDN（访问方式）: 无法访问, 需要您设置 proxyIP/PROXYIP ！！！\n`;
-			订阅器 += `\n您的订阅内容由 内置 addresses/ADD* 参数变量提供\n`;
-			if (addresses.length > 0) 订阅器 += `ADD（TLS优选域名&IP）: \n  ${addresses.join('\n  ')}\n`;
-			if (addressesapi.length > 0) 订阅器 += `ADDAPI（TLS优选域名&IP 的 API）: \n  ${addressesapi.join('\n  ')}\n`;
-			if (addressescsv.length > 0) 订阅器 += `ADDCSV（IPTest测速csv文件 限速 ${DLS} ）: \n  ${addressescsv.join('\n  ')}\n`;
-		}
+                const text = await response.text();
+                const lines = text.split('\n');
+                // Filter out empty lines or lines containing only whitespace
+                const nonEmptyLines = lines.filter(line => line.trim() !== '');
 
-		return `
+                proxyhosts = proxyhosts.concat(nonEmptyLines);
+            } catch (error) {
+                //console.error('Error fetching addresses:', error);
+            }
+        }
+        if (proxyhosts.length != 0) proxyhost = proxyhosts[Math.floor(Math.random() * proxyhosts.length)] + "/";
+    }
+
+    if (userAgent.includes('mozilla') && !subParams.some(_searchParams => _url.searchParams.has(_searchParams))) {
+        let surge = `Surge subscription address:\nhttps://${proxyhost}${hostName}/${password}?surge`;
+        if (hostName.includes(".workers.dev")) surge = "Surge subscription must bind a custom domain";
+        const newSocks5s = socks5s.map(socks5Address => {
+            if (socks5Address.includes('@')) return socks5Address.split('@')[1];
+            else if (socks5Address.includes('//')) return socks5Address.split('//')[1];
+            else return socks5Address;
+        });
+
+        let socks5List = '';
+        if (go2Socks5s.length > 0 && enableSocks) {
+            socks5List = `${decodeURIComponent('SOCKS5%EF%BC%88%E7%99%BD%E5%90%8D%E5%8D%95%EF%BC%89%3A%20')}`;
+            if (go2Socks5s.includes(atob('YWxsIGlu')) || go2Socks5s.includes(atob('Kg=='))) socks5List += `${decodeURIComponent('%E6%89%80%E6%9C%89%E6%B5%81%E9%87%8F')}\n`;
+            else socks5List += `\n  ${go2Socks5s.join('\n  ')}\n`;
+        }
+
+        let subscriber = '';
+        if (sub) {
+            if (enableSocks) subscriber += `CFCDN (access method): Socks5\n  ${newSocks5s.join('\n  ')}\n${socks5List}`;
+            else if (proxyIP && proxyIP != '') subscriber += `CFCDN (access method): ProxyIP\n  ${proxyIPs.join('\n  ')}\n`;
+            else if (RproxyIP == 'true') subscriber += `CFCDN (access method): Auto-obtain ProxyIP\n`;
+            else subscriber += `CFCDN (access method): Cannot access, you need to set proxyIP/PROXYIP!!!\n`
+            subscriber += `\nSUB (preferred subscription generator): ${sub}`;
+        } else {
+            if (enableSocks) subscriber += `CFCDN (access method): Socks5\n  ${newSocks5s.join('\n  ')}\n${socks5List}`;
+            else if (proxyIP && proxyIP != '') subscriber += `CFCDN (access method): ProxyIP\n  ${proxyIPs.join('\n  ')}\n`;
+            else subscriber += `CFCDN (access method): Cannot access, you need to set proxyIP/PROXYIP!!!\n`;
+            subscriber += `\nYour subscription content is provided by the built-in addresses/ADD* parameter variables\n`;
+            if (addresses.length > 0) subscriber += `ADD (TLS preferred domain & IP): \n  ${addresses.join('\n  ')}\n`;
+            if (addressesapi.length > 0) subscriber += `ADDAPI (TLS preferred domain & IP API): \n  ${addressesapi.join('\n  ')}\n`;
+            if (addressescsv.length > 0) subscriber += `ADDCSV (IPTest speed test csv file, speed limit ${DLS}): \n  ${addressescsv.join('\n  ')}\n`;
+        }
+
+        return `
 ################################################################
-Subscribe / sub 订阅地址, 支持 Base64、clash-meta、sing-box 订阅格式
+Subscribe / sub subscription address, supports Base64, clash-meta, sing-box subscription formats
 ---------------------------------------------------------------
-快速自适应订阅地址:
+Quick adaptive subscription address:
 https://${proxyhost}${hostName}/${password}
 https://${proxyhost}${hostName}/${password}?sub
 
-Base64订阅地址:
+Base64 subscription address:
 https://${proxyhost}${hostName}/${password}?b64
 https://${proxyhost}${hostName}/${password}?base64
 
-clash订阅地址:
+clash subscription address:
 https://${proxyhost}${hostName}/${password}?clash
 
-singbox订阅地址:
+singbox subscription address:
 https://${proxyhost}${hostName}/${password}?sb
 https://${proxyhost}${hostName}/${password}?singbox
 
 ${surge}
 ---------------------------------------------------------------
 ################################################################
-${FileName} 配置信息
+${FileName} configuration information
 ---------------------------------------------------------------
 HOST: ${hostName}
 PASSWORD: ${password}
@@ -787,9 +786,9 @@ SHA224: ${sha224Password}
 FAKEPASS: ${fakeUserID}
 UA: ${UA}
 
-${订阅器}
-SUBAPI（订阅转换后端）: ${subProtocol}://${subConverter}
-SUBCONFIG（订阅转换配置文件）: ${subConfig}
+${subscriber}
+SUBAPI (subscription conversion backend): ${subProtocol}://${subConverter}
+SUBCONFIG (subscription conversion configuration file): ${subConfig}
 ---------------------------------------------------------------
 ################################################################
 v2ray
@@ -802,671 +801,671 @@ clash-meta
 ${clash}
 ---------------------------------------------------------------
 ################################################################
-${decodeURIComponent(atob(`dGVsZWdyYW0lMjAlRTQlQkElQTQlRTYlQjUlODElRTclQkUlQTQlMjAlRTYlOEElODAlRTYlOUMlQUYlRTUlQTQlQTclRTQlQkQlQUMlN0UlRTUlOUMlQTglRTclQkElQkYlRTUlOEYlOTElRTclODklOEMhCmh0dHBzJTNBJTJGJTJGdC5tZSUyRkNNTGl1c3NzcwotLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0KZ2l0aHViJTIwJUU5JUExJUI5JUU3JTlCJUFFJUU1JTlDJUIwJUU1JTlEJTgwJTIwU3RhciFTdGFyIVN0YXIhISEKaHR0cHMlM0ElMkYlMkZnaXRodWIuY29tJTJGY21saXUlMkZlcGVpdXMKLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tCiUyMyUyMyUyMyUyMyUyMyUyMyUyMyUyMyUyMyUyMyUyMyUyMyUyMyUyMyUyMyUyMyUyMyUyMyUyMyUyMyUyMyUyMyUyMyUyMyUyMyUyMyUyMyUyMyUyMyUyMyUyMyUyMyUyMyUyMyUyMyUyMyUyMyUyMyUyMyUyMyUyMyUyMyUyMyUyMyUyMyUyMyUyMyUyMyUyMyUyMyUyMyUyMyUyMyUyMyUyMyUyMyUyMyUyMyUyMyUyMyUyMyUyMyUyMyUyMw==`))}
+${decodeURIComponent(atob(`dGVsZWdyYW0lMjAlRTQlQkElQTQlRTYlQjUlODElRTclQkUlQTQlMjAlRTYlOEElODAlRTYlOUMlQUYlRTUlQTQlQTclRTQlQkQlQUMlN0UlRTUlOUMlQTglRTclQkElQkYlRTUlOEYlOTElRTclODklOEMhCmh0dHBzJTNBJTJGJTJGdC5tZSUyRkNNTGl1c3NzcwotLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0KZ2l0aHViJTIwJUU5JUExJUI5JUU3JTlCJUFFJUU1JTlDJUIwJUU1JTlEJTgwJTIwU3RhciFTdGFyIVN0YXIhISEKaHR0cHMlM0ElMkYlMkZnaXRodWIuY29tJTJGY21saXUlMkZlcGVpdXMKLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tCiUyMyUyMyUyMyUyMyUyMyUyMyUyMyUyMyUyMyUyMyUyMyUyMyUyMyUyMyUyMyUyMyUyMyUyMyUyMyUyMyUyMyUyMyUyMyUyMyUyMyUyMyUyMyUyMyUyMyUyMyUyMyUyMyUyMyUyMyUyMyUyMyUyMyUyMyUyMyUyMyUyMyUyMyUyMyUyMyUyMyUyMyUyMyUyMyUyMyUyMyUyMyUyMyUyMyUyMyUyMyUyMyUyMyUyMyUyMyUyMyUyMyUyMyUyMyUyMw==`))}
 `;
-	} else {
-		if (typeof fetch != 'function') {
-			return 'Error: fetch is not available in this environment.';
-		}
-		// 如果是使用默认域名，则改成一个workers的域名，订阅器会加上代理
-		if (hostName.includes(".workers.dev")){
-			fakeHostName = `${fakeHostName}.workers.dev`;
-		} else {
-			fakeHostName = `${fakeHostName}.xyz`
-		}
+    } else {
+        if (typeof fetch != 'function') {
+            return 'Error: fetch is not available in this environment.';
+        }
+        // If using the default domain, change it to a workers domain, the subscriber will add a proxy
+        if (hostName.includes(".workers.dev")) {
+            fakeHostName = `${fakeHostName}.workers.dev`;
+        } else {
+            fakeHostName = `${fakeHostName}.xyz`
+        }
 
-		let url = `https://${sub}/sub?host=${fakeHostName}&pw=${fakeUserID}&password=${fakeUserID + atob('JmVwZWl1cz1jbWxpdSZwcm94eWlwPQ==') + RproxyIP}&path=${encodeURIComponent(path)}`;
-		let isBase64 = true;
-		let newAddressesapi = [];
-		let newAddressescsv = [];
+        let url = `https://${sub}/sub?host=${fakeHostName}&pw=${fakeUserID}&password=${fakeUserID + atob('JmVwZWl1cz1jbWxpdSZwcm94eWlwPQ==') + RproxyIP}&path=${encodeURIComponent(path)}`;
+        let isBase64 = true;
+        let newAddressesapi = [];
+        let newAddressescsv = [];
 
-		if (!sub || sub == "") {
-			if(hostName.includes('workers.dev')) {
-				if (proxyhostsURL && (!proxyhosts || proxyhosts.length == 0)) {
-					try {
-						const response = await fetch(proxyhostsURL); 
-					
-						if (!response.ok) {
-							console.error('获取地址时出错:', response.status, response.statusText);
-							return; // 如果有错误，直接返回
-						}
-					
-						const text = await response.text();
-						const lines = text.split('\n');
-						// 过滤掉空行或只包含空白字符的行
-						const nonEmptyLines = lines.filter(line => line.trim() !== '');
-					
-						proxyhosts = proxyhosts.concat(nonEmptyLines);
-					} catch (error) {
-						console.error('获取地址时出错:', error);
-					}
-				}
-				// 使用Set对象去重
-				proxyhosts = [...new Set(proxyhosts)];
-			}
-	
-			newAddressesapi = await getAddressesapi(addressesapi);
-			newAddressescsv = await getAddressescsv('TRUE');
-			url = `https://${hostName}/${fakeUserID + _url.search}`;
-		} 
+        if (!sub || sub == "") {
+            if (hostName.includes('workers.dev')) {
+                if (proxyhostsURL && (!proxyhosts || proxyhosts.length == 0)) {
+                    try {
+                        const response = await fetch(proxyhostsURL);
 
-		if (!userAgent.includes(('CF-Workers-SUB').toLowerCase())){
-			if ((userAgent.includes('clash') && !userAgent.includes('nekobox')) || ( _url.searchParams.has('clash'))) {
-				url = `${subProtocol}://${subConverter}/sub?target=clash&url=${encodeURIComponent(url)}&insert=false&config=${encodeURIComponent(subConfig)}&emoji=${subEmoji}&list=false&tfo=false&scv=true&fdn=false&sort=false&new_name=true`;
-				isBase64 = false;
-			} else if (userAgent.includes('sing-box') || userAgent.includes('singbox') || _url.searchParams.has('singbox') || _url.searchParams.has('sb')) {
-				url = `${subProtocol}://${subConverter}/sub?target=singbox&url=${encodeURIComponent(url)}&insert=false&config=${encodeURIComponent(subConfig)}&emoji=${subEmoji}&list=false&tfo=false&scv=true&fdn=false&sort=false&new_name=true`;
-				isBase64 = false;
-			} else if (userAgent.includes('surge') || _url.searchParams.has('surge')) {
-				url = `${subProtocol}://${subConverter}/sub?target=surge&ver=4&url=${encodeURIComponent(url)}&insert=false&config=${encodeURIComponent(subConfig)}&emoji=${subEmoji}&list=false&xudp=false&udp=false&tfo=false&expand=true&scv=true&fdn=false`;
-				isBase64 = false;
-			}
-		}
-		
-		try {
-			let content;
-			if ((!sub || sub == "") && isBase64 == true) {
-				content = await subAddresses(fakeHostName,fakeUserID,userAgent,newAddressesapi,newAddressescsv);
-			} else {
-				const response = await fetch(url ,{
-					headers: {
-						'User-Agent': atob('Q0YtV29ya2Vycy1lcGVpdXMvY21saXU='),
-					}});
-				content = await response.text();
-			}
+                        if (!response.ok) {
+                            console.error('Error fetching addresses:', response.status, response.statusText);
+                            return; // If there is an error, return directly
+                        }
 
-			if (_url.pathname == `/${fakeUserID}`) return content;
-			
-			content = revertFakeInfo(content, password, hostName, isBase64);
-			if (userAgent.includes('surge') || _url.searchParams.has('surge')) content = surge(content, `https://${hostName}/${password}?surge`);	
-			return content;
-		} catch (error) {
-			console.error('Error fetching content:', error);
-			return `Error fetching content: ${error.message}`;
-		}
-	}
+                        const text = await response.text();
+                        const lines = text.split('\n');
+                        // Filter out empty lines or lines containing only whitespace
+                        const nonEmptyLines = lines.filter(line => line.trim() !== '');
+
+                        proxyhosts = proxyhosts.concat(nonEmptyLines);
+                    } catch (error) {
+                        console.error('Error fetching addresses:', error);
+                    }
+                }
+                // Use Set object to deduplicate
+                proxyhosts = [...new Set(proxyhosts)];
+            }
+
+            newAddressesapi = await getAddressesapi(addressesapi);
+            newAddressescsv = await getAddressescsv('TRUE');
+            url = `https://${hostName}/${fakeUserID + _url.search}`;
+        }
+
+        if (!userAgent.includes(('CF-Workers-SUB').toLowerCase())) {
+            if ((userAgent.includes('clash') && !userAgent.includes('nekobox')) || (_url.searchParams.has('clash'))) {
+                url = `${subProtocol}://${subConverter}/sub?target=clash&url=${encodeURIComponent(url)}&insert=false&config=${encodeURIComponent(subConfig)}&emoji=${subEmoji}&list=false&tfo=false&scv=true&fdn=false&sort=false&new_name=true`;
+                isBase64 = false;
+            } else if (userAgent.includes('sing-box') || userAgent.includes('singbox') || _url.searchParams.has('singbox') || _url.searchParams.has('sb')) {
+                url = `${subProtocol}://${subConverter}/sub?target=singbox&url=${encodeURIComponent(url)}&insert=false&config=${encodeURIComponent(subConfig)}&emoji=${subEmoji}&list=false&tfo=false&scv=true&fdn=false&sort=false&new_name=true`;
+                isBase64 = false;
+            } else if (userAgent.includes('surge') || _url.searchParams.has('surge')) {
+                url = `${subProtocol}://${subConverter}/sub?target=surge&ver=4&url=${encodeURIComponent(url)}&insert=false&config=${encodeURIComponent(subConfig)}&emoji=${subEmoji}&list=false&xudp=false&udp=false&tfo=false&expand=true&scv=true&fdn=false`;
+                isBase64 = false;
+            }
+        }
+
+        try {
+            let content;
+            if ((!sub || sub == "") && isBase64 == true) {
+                content = await subAddresses(fakeHostName, fakeUserID, userAgent, newAddressesapi, newAddressescsv);
+            } else {
+                const response = await fetch(url, {
+                    headers: {
+                        'User-Agent': atob('Q0YtV29ya2Vycy1lcGVpdXMvY21saXU='),
+                    }
+                });
+                content = await response.text();
+            }
+
+            if (_url.pathname == `/${fakeUserID}`) return content;
+
+            content = revertFakeInfo(content, password, hostName, isBase64);
+            if (userAgent.includes('surge') || _url.searchParams.has('surge')) content = surge(content, `https://${hostName}/${password}?surge`);
+            return content;
+        } catch (error) {
+            console.error('Error fetching content:', error);
+            return `Error fetching content: ${error.message}`;
+        }
+    }
 }
 
 async function sendMessage(type, ip, add_data = "") {
-	if ( BotToken !== '' && ChatID !== ''){
-		let msg = "";
-		const response = await fetch(`http://ip-api.com/json/${ip}?lang=zh-CN`);
-		if (response.status == 200) {
-			const ipInfo = await response.json();
-			msg = `${type}\nIP: ${ip}\n国家: ${ipInfo.country}\n<tg-spoiler>城市: ${ipInfo.city}\n组织: ${ipInfo.org}\nASN: ${ipInfo.as}\n${add_data}`;
-		} else {
-			msg = `${type}\nIP: ${ip}\n<tg-spoiler>${add_data}`;
-		}
-	
-		let url = "https://api.telegram.org/bot"+ BotToken +"/sendMessage?chat_id=" + ChatID + "&parse_mode=HTML&text=" + encodeURIComponent(msg);
-		return fetch(url, {
-			method: 'get',
-			headers: {
-				'Accept': 'text/html,application/xhtml+xml,application/xml;',
-				'Accept-Encoding': 'gzip, deflate, br',
-				'User-Agent': 'Mozilla/5.0 Chrome/90.0.4430.72'
-			}
-		});
-	}
+    if (BotToken !== '' && ChatID !== '') {
+        let msg = "";
+        const response = await fetch(`http://ip-api.com/json/${ip}?lang=zh-CN`);
+        if (response.status == 200) {
+            const ipInfo = await response.json();
+            msg = `${type}\nIP: ${ip}\nCountry: ${ipInfo.country}\n<tg-spoiler>City: ${ipInfo.city}\nOrganization: ${ipInfo.org}\nASN: ${ipInfo.as}\n${add_data}`;
+        } else {
+            msg = `${type}\nIP: ${ip}\n<tg-spoiler>${add_data}`;
+        }
+
+        let url = "https://api.telegram.org/bot" + BotToken + "/sendMessage?chat_id=" + ChatID + "&parse_mode=HTML&text=" + encodeURIComponent(msg);
+        return fetch(url, {
+            method: 'get',
+            headers: {
+                'Accept': 'text/html,application/xhtml+xml,application/xml;',
+                'Accept-Encoding': 'gzip, deflate, br',
+                'User-Agent': 'Mozilla/5.0 Chrome/90.0.4430.72'
+            }
+        });
+    }
 }
 
 /**
- * 
+ *
  * @param {number} addressType
  * @param {string} addressRemote
  * @param {number} portRemote
  * @param {function} log The logging function.
  */
 async function socks5Connect(addressType, addressRemote, portRemote, log) {
-	const { username, password, hostname, port } = parsedSocks5Address;
-	// Connect to the SOCKS server
-	const socket = connect({
-		hostname,
-		port,
-	});
+    const { username, password, hostname, port } = parsedSocks5Address;
+    // Connect to the SOCKS server
+    const socket = connect({
+        hostname,
+        port,
+    });
 
-	// Request head format (Worker -> Socks Server):
-	// +----+----------+----------+
-	// |VER | NMETHODS | METHODS  |
-	// +----+----------+----------+
-	// | 1  |	1	 | 1 to 255 |
-	// +----+----------+----------+
+    // Request head format (Worker -> Socks Server):
+    // +----+----------+----------+
+    // |VER | NMETHODS | METHODS  |
+    // +----+----------+----------+
+    // | 1  |    1     | 1 to 255 |
+    // +----+----------+----------+
 
-	// https://en.wikipedia.org/wiki/SOCKS#SOCKS5
-	// For METHODS:
-	// 0x00 NO AUTHENTICATION REQUIRED
-	// 0x02 USERNAME/PASSWORD https://datatracker.ietf.org/doc/html/rfc1929
-	const socksGreeting = new Uint8Array([5, 2, 0, 2]);
+    // https://en.wikipedia.org/wiki/SOCKS#SOCKS5
+    // For METHODS:
+    // 0x00 NO AUTHENTICATION REQUIRED
+    // 0x02 USERNAME/PASSWORD https://datatracker.ietf.org/doc/html/rfc1929
+    const socksGreeting = new Uint8Array([5, 2, 0, 2]);
 
-	const writer = socket.writable.getWriter();
+    const writer = socket.writable.getWriter();
 
-	await writer.write(socksGreeting);
-	log('sent socks greeting');
+    await writer.write(socksGreeting);
+    log('sent socks greeting');
 
-	const reader = socket.readable.getReader();
-	const encoder = new TextEncoder();
-	let res = (await reader.read()).value;
-	// Response format (Socks Server -> Worker):
-	// +----+--------+
-	// |VER | METHOD |
-	// +----+--------+
-	// | 1  |   1	|
-	// +----+--------+
-	if (res[0] !== 0x05) {
-		log(`socks server version error: ${res[0]} expected: 5`);
-		return;
-	}
-	if (res[1] === 0xff) {
-		log("no acceptable methods");
-		return;
-	}
+    const reader = socket.readable.getReader();
+    const encoder = new TextEncoder();
+    let res = (await reader.read()).value;
+    // Response format (Socks Server -> Worker):
+    // +----+--------+
+    // |VER | METHOD |
+    // +----+--------+
+    // | 1  |   1    |
+    // +----+--------+
+    if (res[0] !== 0x05) {
+        log(`socks server version error: ${res[0]} expected: 5`);
+        return;
+    }
+    if (res[1] === 0xff) {
+        log("no acceptable methods");
+        return;
+    }
 
-	// if return 0x0502
-	if (res[1] === 0x02) {
-		log("socks server needs auth");
-		if (!username || !password) {
-			log("please provide username/password");
-			return;
-		}
-		// +----+------+----------+------+----------+
-		// |VER | ULEN |  UNAME   | PLEN |  PASSWD  |
-		// +----+------+----------+------+----------+
-		// | 1  |  1   | 1 to 255 |  1   | 1 to 255 |
-		// +----+------+----------+------+----------+
-		const authRequest = new Uint8Array([
-			1,
-			username.length,
-			...encoder.encode(username),
-			password.length,
-			...encoder.encode(password)
-		]);
-		await writer.write(authRequest);
-		res = (await reader.read()).value;
-		// expected 0x0100
-		if (res[0] !== 0x01 || res[1] !== 0x00) {
-			log("fail to auth socks server");
-			return;
-		}
-	}
+    // if return 0x0502
+    if (res[1] === 0x02) {
+        log("socks server needs auth");
+        if (!username || !password) {
+            log("please provide username/password");
+            return;
+        }
+        // +----+------+----------+------+----------+
+        // |VER | ULEN |  UNAME   | PLEN |  PASSWD  |
+        // +----+------+----------+------+----------+
+        // | 1  |  1   | 1 to 255 |  1   | 1 to 255 |
+        // +----+------+----------+------+----------+
+        const authRequest = new Uint8Array([
+            1,
+            username.length,
+            ...encoder.encode(username),
+            password.length,
+            ...encoder.encode(password)
+        ]);
+        await writer.write(authRequest);
+        res = (await reader.read()).value;
+        // expected 0x0100
+        if (res[0] !== 0x01 || res[1] !== 0x00) {
+            log("fail to auth socks server");
+            return;
+        }
+    }
 
-	// Request data format (Worker -> Socks Server):
-	// +----+-----+-------+------+----------+----------+
-	// |VER | CMD |  RSV  | ATYP | DST.ADDR | DST.PORT |
-	// +----+-----+-------+------+----------+----------+
-	// | 1  |  1  | X'00' |  1   | Variable |	2	 |
-	// +----+-----+-------+------+----------+----------+
-	// ATYP: address type of following address
-	// 0x01: IPv4 address
-	// 0x03: Domain name
-	// 0x04: IPv6 address
-	// DST.ADDR: desired destination address
-	// DST.PORT: desired destination port in network octet order
+    // Request data format (Worker -> Socks Server):
+    // +----+-----+-------+------+----------+----------+
+    // |VER | CMD |  RSV  | ATYP | DST.ADDR | DST.PORT |
+    // +----+-----+-------+------+----------+----------+
+    // | 1  |  1  | X'00' |  1   | Variable |    2     |
+    // +----+-----+-------+------+----------+----------+
+    // ATYP: address type of following address
+    // 0x01: IPv4 address
+    // 0x03: Domain name
+    // 0x04: IPv6 address
+    // DST.ADDR: desired destination address
+    // DST.PORT: desired destination port in network octet order
 
-	// addressType
-	// 0x01: IPv4 address
-	// 0x03: Domain name
-	// 0x04: IPv6 address
-	// 1--> ipv4  addressLength =4
-	// 2--> domain name
-	// 3--> ipv6  addressLength =16
-	let DSTADDR;	// DSTADDR = ATYP + DST.ADDR
-	switch (addressType) {
-		case 1:
-			DSTADDR = new Uint8Array(
-				[1, ...addressRemote.split('.').map(Number)]
-			);
-			break;
-		case 3:
-			DSTADDR = new Uint8Array(
-				[3, addressRemote.length, ...encoder.encode(addressRemote)]
-			);
-			break;
-		case 4:
-			DSTADDR = new Uint8Array(
-				[4, ...addressRemote.split(':').flatMap(x => [parseInt(x.slice(0, 2), 16), parseInt(x.slice(2), 16)])]
-			);
-			break;
-		default:
-			log(`invild  addressType is ${addressType}`);
-			return;
-	}
-	const socksRequest = new Uint8Array([5, 1, 0, ...DSTADDR, portRemote >> 8, portRemote & 0xff]);
-	await writer.write(socksRequest);
-	log('sent socks request');
+    // addressType
+    // 0x01: IPv4 address
+    // 0x03: Domain name
+    // 0x04: IPv6 address
+    // 1--> ipv4  addressLength =4
+    // 2--> domain name
+    // 3--> ipv6  addressLength =16
+    let DSTADDR; // DSTADDR = ATYP + DST.ADDR
+    switch (addressType) {
+        case 1:
+            DSTADDR = new Uint8Array(
+                [1, ...addressRemote.split('.').map(Number)]
+            );
+            break;
+        case 3:
+            DSTADDR = new Uint8Array(
+                [3, addressRemote.length, ...encoder.encode(addressRemote)]
+            );
+            break;
+        case 4:
+            DSTADDR = new Uint8Array(
+                [4, ...addressRemote.split(':').flatMap(x => [parseInt(x.slice(0, 2), 16), parseInt(x.slice(2), 16)])]
+            );
+            break;
+        default:
+            log(`invalid addressType is ${addressType}`);
+            return;
+    }
+    const socksRequest = new Uint8Array([5, 1, 0, ...DSTADDR, portRemote >> 8, portRemote & 0xff]);
+    await writer.write(socksRequest);
+    log('sent socks request');
 
-	res = (await reader.read()).value;
-	// Response format (Socks Server -> Worker):
-	//  +----+-----+-------+------+----------+----------+
-	// |VER | REP |  RSV  | ATYP | BND.ADDR | BND.PORT |
-	// +----+-----+-------+------+----------+----------+
-	// | 1  |  1  | X'00' |  1   | Variable |	2	 |
-	// +----+-----+-------+------+----------+----------+
-	if (res[1] === 0x00) {
-		log("socks connection opened");
-	} else {
-		log("fail to open socks connection");
-		return;
-	}
-	writer.releaseLock();
-	reader.releaseLock();
-	return socket;
+    res = (await reader.read()).value;
+    // Response format (Socks Server -> Worker):
+    //  +----+-----+-------+------+----------+----------+
+    // |VER | REP |  RSV  | ATYP | BND.ADDR | BND.PORT |
+    // +----+-----+-------+------+----------+----------+
+    // | 1  |  1  | X'00' |  1   | Variable |    2     |
+    // +----+-----+-------+------+----------+----------+
+    if (res[1] === 0x00) {
+        log("socks connection opened");
+    } else {
+        log("fail to open socks connection");
+        return;
+    }
+    writer.releaseLock();
+    reader.releaseLock();
+    return socket;
 }
 
 /**
- * 
+ *
  * @param {string} address
  */
 function socks5AddressParser(address) {
-	let [latter, former] = address.split("@").reverse();
-	let username, password, hostname, port;
-	if (former) {
-		const formers = former.split(":");
-		if (formers.length !== 2) {
-			throw new Error('Invalid SOCKS address format');
-		}
-		[username, password] = formers;
-	}
-	const latters = latter.split(":");
-	port = Number(latters.pop());
-	if (isNaN(port)) {
-		throw new Error('Invalid SOCKS address format');
-	}
-	hostname = latters.join(":");
-	const regex = /^\[.*\]$/;
-	if (hostname.includes(":") && !regex.test(hostname)) {
-		throw new Error('Invalid SOCKS address format');
-	}
-	//if (/^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?).){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/.test(hostname)) hostname = `${atob('d3d3Lg==')}${hostname}${atob('LmlwLjA5MDIyNy54eXo=')}`;
-	return {
-		username,
-		password,
-		hostname,
-		port,
-	}
+    let [latter, former] = address.split("@").reverse();
+    let username, password, hostname, port;
+    if (former) {
+        const formers = former.split(":");
+        if (formers.length !== 2) {
+            throw new Error('Invalid SOCKS address format');
+        }
+        [username, password] = formers;
+    }
+    const latters = latter.split(":");
+    port = Number(latters.pop());
+    if (isNaN(port)) {
+        throw new Error('Invalid SOCKS address format');
+    }
+    hostname = latters.join(":");
+    const regex = /^\[.*\]$/;
+    if (hostname.includes(":") && !regex.test(hostname)) {
+        throw new Error('Invalid SOCKS address format');
+    }
+    //if (/^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?).){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/.test(hostname)) hostname = `${atob('d3d3Lg==')}${hostname}${atob('LmlwLjA5MDIyNy54eXo=')}`;
+    return {
+        username,
+        password,
+        hostname,
+        port,
+    }
 }
 
 function isValidIPv4(address) {
-	const ipv4Regex = /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
-	return ipv4Regex.test(address);
+    const ipv4Regex = /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
+    return ipv4Regex.test(address);
 }
 
-function subAddresses(host,pw,userAgent,newAddressesapi,newAddressescsv) {
-	addresses = addresses.concat(newAddressesapi);
-	addresses = addresses.concat(newAddressescsv);
-	// 使用Set对象去重
-	const uniqueAddresses = [...new Set(addresses)];
-				
-	const responseBody = uniqueAddresses.map(address => {
-		let port = "-1";
-		let addressid = address;
+function subAddresses(host, pw, userAgent, newAddressesapi, newAddressescsv) {
+    addresses = addresses.concat(newAddressesapi);
+    addresses = addresses.concat(newAddressescsv);
+    // Use Set object to deduplicate
+    const uniqueAddresses = [...new Set(addresses)];
 
-		const match = addressid.match(regex);
-		if (!match) {
-			if (address.includes(':') && address.includes('#')) {
-				const parts = address.split(':');
-				address = parts[0];
-				const subParts = parts[1].split('#');
-				port = subParts[0];
-				addressid = subParts[1];
-			} else if (address.includes(':')) {
-				const parts = address.split(':');
-				address = parts[0];
-				port = parts[1];
-			} else if (address.includes('#')) {
-				const parts = address.split('#');
-				address = parts[0];
-				addressid = parts[1];
-			}
-		
-			if (addressid.includes(':')) {
-				addressid = addressid.split(':')[0];
-			}
-		} else {
-			address = match[1];
-			port = match[2] || port;
-			addressid = match[3] || address;
-		}
+    const responseBody = uniqueAddresses.map(address => {
+        let port = "-1";
+        let addressid = address;
 
-		const httpsPorts = ["2053","2083","2087","2096","8443"];
-		if (!isValidIPv4(address) && port == "-1") {
-			for (let httpsPort of httpsPorts) {
-				if (address.includes(httpsPort)) {
-					port = httpsPort;
-					break;
-				}
-			}
-		}
-		if (port == "-1") port = "443";
-		
-		let 伪装域名 = host ;
-		let 最终路径 = path ;
-		let 节点备注 = '';
-		
-		if(proxyhosts.length > 0 && (伪装域名.includes('.workers.dev'))) {
-			最终路径 = `/${伪装域名}${最终路径}`;
-			伪装域名 = proxyhosts[Math.floor(Math.random() * proxyhosts.length)];
-			节点备注 = ` 已启用临时域名中转服务，请尽快绑定自定义域！`;
-		}
-		const matchingProxyIP = proxyIPPool.find(proxyIP => proxyIP.includes(address));
-		if (matchingProxyIP) 最终路径 += `&proxyip=${matchingProxyIP}`;
-		let 密码 = pw;
-		if (!userAgent.includes('subconverter')) 密码 = encodeURIComponent(pw);
+        const match = addressid.match(regex);
+        if (!match) {
+            if (address.includes(':') && address.includes('#')) {
+                const parts = address.split(':');
+                address = parts[0];
+                const subParts = parts[1].split('#');
+                port = subParts[0];
+                addressid = subParts[1];
+            } else if (address.includes(':')) {
+                const parts = address.split(':');
+                address = parts[0];
+                port = parts[1];
+            } else if (address.includes('#')) {
+                const parts = address.split('#');
+                address = parts[0];
+                addressid = parts[1];
+            }
 
-		const 啥啥啥_写的这是啥啊 = 'dHJvamFu';
-		const 协议类型 = atob(啥啥啥_写的这是啥啊);
-		const 特洛伊Link = `${协议类型}://${密码}@${address}:${port}?security=tls&sni=${伪装域名}&fp=randomized&type=ws&host=${伪装域名}&path=${encodeURIComponent(最终路径)}#${encodeURIComponent(addressid + 节点备注)}`;
+            if (addressid.includes(':')) {
+                addressid = addressid.split(':')[0];
+            }
+        } else {
+            address = match[1];
+            port = match[2] || port;
+            addressid = match[3] || address;
+        }
 
-		return 特洛伊Link;
-	}).join('\n');
+        const httpsPorts = ["2053", "2083", "2087", "2096", "8443"];
+        if (!isValidIPv4(address) && port == "-1") {
+            for (let httpsPort of httpsPorts) {
+                if (address.includes(httpsPort)) {
+                    port = httpsPort;
+                    break;
+                }
+            }
+        }
+        if (port == "-1") port = "443";
 
-	const base64Response = btoa(responseBody); // 重新进行 Base64 编码
+        let disguisedDomain = host;
+        let finalPath = path;
+        let nodeRemark = '';
 
-	return base64Response;
+        if (proxyhosts.length > 0 && (disguisedDomain.includes('.workers.dev'))) {
+            finalPath = `/${disguisedDomain}${finalPath}`;
+            disguisedDomain = proxyhosts[Math.floor(Math.random() * proxyhosts.length)];
+            nodeRemark = ` Temporary domain forwarding service enabled, please bind a custom domain as soon as possible!`;
+        }
+        const matchingProxyIP = proxyIPPool.find(proxyIP => proxyIP.includes(address));
+        if (matchingProxyIP) finalPath += `&proxyip=${matchingProxyIP}`;
+        let password = pw;
+        if (!userAgent.includes('subconverter')) password = encodeURIComponent(pw);
+
+        const 啥啥啥_写的这是啥啊 = 'dHJvamFu';
+        const protocolType = atob(啥啥啥_写的这是啥啊);
+        const trojanLink = `${protocolType}://${password}@${address}:${port}?security=tls&sni=${disguisedDomain}&fp=randomized&type=ws&host=${disguisedDomain}&path=${encodeURIComponent(finalPath)}#${encodeURIComponent(addressid + nodeRemark)}`;
+
+        return trojanLink;
+    }).join('\n');
+
+    const base64Response = btoa(responseBody); // Re-encode in Base64
+
+    return base64Response;
 }
 
 async function getAddressesapi(api) {
-	if (!api || api.length === 0) return [];
+    if (!api || api.length === 0) return [];
+    let newapi = "";
 
-	let newapi = "";
+    // Create an AbortController object to control the cancellation of fetch requests
+    const controller = new AbortController();
 
-	// 创建一个AbortController对象，用于控制fetch请求的取消
-	const controller = new AbortController();
+    const timeout = setTimeout(() => {
+        controller.abort(); // Cancel all requests
+    }, 2000); // Trigger after 2 seconds
 
-	const timeout = setTimeout(() => {
-		controller.abort(); // 取消所有请求
-	}, 2000); // 2秒后触发
+    try {
+        // Use Promise.allSettled to wait for all API requests to complete, whether they succeed or fail
+        // Iterate over the api array and make a fetch request for each API address
+        const responses = await Promise.allSettled(api.map(apiUrl => fetch(apiUrl, {
+            method: 'get',
+            headers: {
+                'Accept': 'text/html,application/xhtml+xml,application/xml;',
+                'User-Agent': atob('Q0YtV29ya2Vycy1lcGVpdXMvY21saXU=')
+            },
+            signal: controller.signal // Add the AbortController signal to the fetch request to cancel the request if needed
+        }).then(response => response.ok ? response.text() : Promise.reject())));
 
-	try {
-		// 使用Promise.allSettled等待所有API请求完成，无论成功或失败
-		// 对api数组进行遍历，对每个API地址发起fetch请求
-		const responses = await Promise.allSettled(api.map(apiUrl => fetch(apiUrl, {
-			method: 'get', 
-			headers: {
-				'Accept': 'text/html,application/xhtml+xml,application/xml;',
-				'User-Agent': atob('Q0YtV29ya2Vycy1lcGVpdXMvY21saXU=')
-			},
-			signal: controller.signal // 将AbortController的信号量添加到fetch请求中，以便于需要时可以取消请求
-		}).then(response => response.ok ? response.text() : Promise.reject())));
+        // Iterate over all responses
+        for (const [index, response] of responses.entries()) {
+            // Check if the response status is 'fulfilled', i.e., the request completed successfully
+            if (response.status === 'fulfilled') {
+                // Get the content of the response
+                const content = await response.value;
 
-		// 遍历所有响应
-		for (const [index, response] of responses.entries()) {
-			// 检查响应状态是否为'fulfilled'，即请求成功完成
-			if (response.status === 'fulfilled') {
-				// 获取响应的内容
-				const content = await response.value;
+                const lines = content.split(/\r?\n/);
+                let nodeRemark = '';
+                let testPort = '443';
+                if (lines[0].split(',').length > 3) {
+                    const idMatch = api[index].match(/id=([^&]*)/);
+                    if (idMatch) nodeRemark = idMatch[1];
+                    const portMatch = api[index].match(/port=([^&]*)/);
+                    if (portMatch) testPort = portMatch[1];
 
-				const lines = content.split(/\r?\n/);
-				let 节点备注 = '';
-				let 测速端口 = '443';
-				if (lines[0].split(',').length > 3){
-					const idMatch = api[index].match(/id=([^&]*)/);
-					if (idMatch) 节点备注 = idMatch[1];
-					const portMatch = api[index].match(/port=([^&]*)/);
-					if (portMatch) 测速端口 = portMatch[1];
-					
-					for (let i = 1; i < lines.length; i++) {
-						const columns = lines[i].split(',')[0];
-						if(columns){
-							newapi += `${columns}:${测速端口}${节点备注 ? `#${节点备注}` : ''}\n`;
-							if (api[index].includes('proxyip=true')) proxyIPPool.push(`${columns}:${测速端口}`);
-						}
-					}
-				} else {
-					// 验证当前apiUrl是否带有'proxyip=true'
-					if (api[index].includes('proxyip=true')) {
-						// 如果URL带有'proxyip=true'，则将内容添加到proxyIPPool
-						proxyIPPool = proxyIPPool.concat((await ADD(content)).map(item => {
-							const baseItem = item.split('#')[0] || item;
-							if (baseItem.includes(':')) {
-								const port = baseItem.split(':')[1];
-								if (!httpsPorts.includes(port)) {
-									return baseItem;
-								}
-							} else {
-								return `${baseItem}:443`;
-							}
-							return null; // 不符合条件时返回 null
-						}).filter(Boolean)); // 过滤掉 null 值
-					}
-					// 将内容添加到newapi中
-					newapi += content + '\n';
-				}
-			}
-		}
-	} catch (error) {
-		console.error(error);
-	} finally {
-		// 无论成功或失败，最后都清除设置的超时定时器
-		clearTimeout(timeout);
-	}
+                    for (let i = 1; i < lines.length; i++) {
+                        const columns = lines[i].split(',')[0];
+                        if (columns) {
+                            newapi += `${columns}:${testPort}${nodeRemark ? `#${nodeRemark}` : ''}\n`;
+                            if (api[index].includes('proxyip=true')) proxyIPPool.push(`${columns}:${testPort}`);
+                        }
+                    }
+                } else {
+                    // Verify if the current apiUrl contains 'proxyip=true'
+                    if (api[index].includes('proxyip=true')) {
+                        // If the URL contains 'proxyip=true', add the content to proxyIPPool
+                        proxyIPPool = proxyIPPool.concat((await ADD(content)).map(item => {
+                            const baseItem = item.split('#')[0] || item;
+                            if (baseItem.includes(':')) {
+                                const port = baseItem.split(':')[1];
+                                if (!httpsPorts.includes(port)) {
+                                    return baseItem;
+                                }
+                            } else {
+                                return `${baseItem}:443`;
+                            }
+                            return null; // Return null if the condition is not met
+                        }).filter(Boolean)); // Filter out null values
+                    }
+                    // Add the content to newapi
+                    newapi += content + '\n';
+                }
+            }
+        }
+    } catch (error) {
+        console.error(error);
+    } finally {
+        // Clear the timeout regardless of success or failure
+        clearTimeout(timeout);
+    }
 
-	const newAddressesapi = await ADD(newapi);
+    const newAddressesapi = await ADD(newapi);
 
-	// 返回处理后的结果
-	return newAddressesapi;
+    // Return the processed result
+    return newAddressesapi;
 }
 
 async function getAddressescsv(tls) {
-	if (!addressescsv || addressescsv.length === 0) {
-		return [];
-	}
-	
-	let newAddressescsv = [];
-	
-	for (const csvUrl of addressescsv) {
-		try {
-			const response = await fetch(csvUrl);
-		
-			if (!response.ok) {
-				console.error('获取CSV地址时出错:', response.status, response.statusText);
-				continue;
-			}
-		
-			const text = await response.text();// 使用正确的字符编码解析文本内容
-			let lines;
-			if (text.includes('\r\n')){
-				lines = text.split('\r\n');
-			} else {
-				lines = text.split('\n');
-			}
-		
-			// 检查CSV头部是否包含必需字段
-			const header = lines[0].split(',');
-			const tlsIndex = header.indexOf('TLS');
-			
-			const ipAddressIndex = 0;// IP地址在 CSV 头部的位置
-			const portIndex = 1;// 端口在 CSV 头部的位置
-			const dataCenterIndex = tlsIndex + remarkIndex; // 数据中心是 TLS 的后一个字段
-		
-			if (tlsIndex === -1) {
-				console.error('CSV文件缺少必需的字段');
-				continue;
-			}
-		
-			// 从第二行开始遍历CSV行
-			for (let i = 1; i < lines.length; i++) {
-				const columns = lines[i].split(',');
-				const speedIndex = columns.length - 1; // 最后一个字段
-				// 检查TLS是否为"TRUE"且速度大于DLS
-				if (columns[tlsIndex].toUpperCase() === tls && parseFloat(columns[speedIndex]) > DLS) {
-					const ipAddress = columns[ipAddressIndex];
-					const port = columns[portIndex];
-					const dataCenter = columns[dataCenterIndex];
-			
-					const formattedAddress = `${ipAddress}:${port}#${dataCenter}`;
-					newAddressescsv.push(formattedAddress);
-					if (csvUrl.includes('proxyip=true') && columns[tlsIndex].toUpperCase() == 'true' && !httpsPorts.includes(port)) {
-						// 如果URL带有'proxyip=true'，则将内容添加到proxyIPPool
-						proxyIPPool.push(`${ipAddress}:${port}`);
-					}
-				}
-			}
-		} catch (error) {
-			console.error('获取CSV地址时出错:', error);
-			continue;
-		}
-	}
-	
-	return newAddressescsv;
+    if (!addressescsv || addressescsv.length === 0) {
+        return [];
+    }
+
+    let newAddressescsv = [];
+
+    for (const csvUrl of addressescsv) {
+        try {
+            const response = await fetch(csvUrl);
+
+            if (!response.ok) {
+                console.error('Error fetching CSV address:', response.status, response.statusText);
+                continue;
+            }
+
+            const text = await response.text(); // Parse the text content with the correct character encoding
+            let lines;
+            if (text.includes('\r\n')) {
+                lines = text.split('\r\n');
+            } else {
+                lines = text.split('\n');
+            }
+
+            // Check if the CSV header contains the required fields
+            const header = lines[0].split(',');
+            const tlsIndex = header.indexOf('TLS');
+
+            const ipAddressIndex = 0; // Position of the IP address in the CSV header
+            const portIndex = 1; // Position of the port in the CSV header
+            const dataCenterIndex = tlsIndex + remarkIndex; // Data center is the field after TLS
+
+            if (tlsIndex === -1) {
+                console.error('CSV file is missing required fields');
+                continue;
+            }
+
+            // Iterate over the CSV rows starting from the second row
+            for (let i = 1; i < lines.length; i++) {
+                const columns = lines[i].split(',');
+                const speedIndex = columns.length - 1; // Last field
+                // Check if TLS is "TRUE" and speed is greater than DLS
+                if (columns[tlsIndex].toUpperCase() === tls && parseFloat(columns[speedIndex]) > DLS) {
+                    const ipAddress = columns[ipAddressIndex];
+                    const port = columns[portIndex];
+                    const dataCenter = columns[dataCenterIndex];
+
+                    const formattedAddress = `${ipAddress}:${port}#${dataCenter}`;
+                    newAddressescsv.push(formattedAddress);
+                    if (csvUrl.includes('proxyip=true') && columns[tlsIndex].toUpperCase() == 'true' && !httpsPorts.includes(port)) {
+                        // If the URL contains 'proxyip=true', add the content to proxyIPPool
+                        proxyIPPool.push(`${ipAddress}:${port}`);
+                    }
+                }
+            }
+        } catch (error) {
+            console.error('Error fetching CSV address:', error);
+            continue;
+        }
+    }
+
+    return newAddressescsv;
 }
 
 function surge(content, url) {
-	let 每行内容;
-	if (content.includes('\r\n')){
-		每行内容 = content.split('\r\n');
-	} else {
-		每行内容 = content.split('\n');
-	}
+    let eachLine;
+    if (content.includes('\r\n')) {
+        eachLine = content.split('\r\n');
+    } else {
+        eachLine = content.split('\n');
+    }
 
-	let 输出内容 = "";
-	for (let x of 每行内容) {
-		if (x.includes(atob('PSB0cm9qYW4s'))) {
-			const host = x.split("sni=")[1].split(",")[0];
-			const 备改内容 = `skip-cert-verify=true, tfo=false, udp-relay=false`;
-			const 正确内容 = `skip-cert-verify=true, ws=true, ws-path=${path}, ws-headers=Host:"${host}", tfo=false, udp-relay=false`;
-			输出内容 += x.replace(new RegExp(备改内容, 'g'), 正确内容).replace("[", "").replace("]", "") + '\n';
-		} else {
-			输出内容 += x + '\n';
-		}
-	}
+    let outputContent = "";
+    for (let x of eachLine) {
+        if (x.includes(atob('PSB0cm9qYW4s'))) {
+            const host = x.split("sni=")[1].split(",")[0];
+            const backupContent = `skip-cert-verify=true, tfo=false, udp-relay=false`;
+            const correctContent = `skip-cert-verify=true, ws=true, ws-path=${path}, ws-headers=Host:"${host}", tfo=false, udp-relay=false`;
+            outputContent += x.replace(new RegExp(backupContent, 'g'), correctContent).replace("[", "").replace("]", "") + '\n';
+        } else {
+            outputContent += x + '\n';
+        }
+    }
 
-	输出内容 = `#!MANAGED-CONFIG ${url} interval=86400 strict=false` + 输出内容.substring(输出内容.indexOf('\n'));
-	return 输出内容;
+    outputContent = `#!MANAGED-CONFIG ${url} interval=86400 strict=false` + outputContent.substring(outputContent.indexOf('\n'));
+    return outputContent;
 }
 
 /**
  * [js-sha256]{@link https://github.com/emn178/js-sha256}
- * 
+ *
  * @version 0.11.0 (modified by cmliu)
- * @description 本代码基于 js-sha256 项目改编，添加了 SHA-224 哈希算法的实现。
+ * @description This code is based on the js-sha256 project, with the addition of the SHA-224 hash algorithm implementation.
  * @author Chen, Yi-Cyuan [emn178@gmail.com], modified by cmliu
  * @copyright Chen, Yi-Cyuan 2014-2024
  * @license MIT
- * 
- * @modifications 重写并实现了 sha224 函数，引用请注明出处。修改日期：2024-12-04，Github：cmliu
+ *
+ * @modifications Rewrote and implemented the sha224 function. Please cite the source when referencing. Modification date: 2024-12-04, Github: cmliu
  */
-function sha224(输入字符串) {
-	// 内部常量和函数
-	const 常量K = [
-		0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5, 0x3956c25b, 0x59f111f1, 0x923f82a4, 0xab1c5ed5,
-		0xd807aa98, 0x12835b01, 0x243185be, 0x550c7dc3, 0x72be5d74, 0x80deb1fe, 0x9bdc06a7, 0xc19bf174,
-		0xe49b69c1, 0xefbe4786, 0x0fc19dc6, 0x240ca1cc, 0x2de92c6f, 0x4a7484aa, 0x5cb0a9dc, 0x76f988da,
-		0x983e5152, 0xa831c66d, 0xb00327c8, 0xbf597fc7, 0xc6e00bf3, 0xd5a79147, 0x06ca6351, 0x14292967,
-		0x27b70a85, 0x2e1b2138, 0x4d2c6dfc, 0x53380d13, 0x650a7354, 0x766a0abb, 0x81c2c92e, 0x92722c85,
-		0xa2bfe8a1, 0xa81a664b, 0xc24b8b70, 0xc76c51a3, 0xd192e819, 0xd6990624, 0xf40e3585, 0x106aa070,
-		0x19a4c116, 0x1e376c08, 0x2748774c, 0x34b0bcb5, 0x391c0cb3, 0x4ed8aa4a, 0x5b9cca4f, 0x682e6ff3,
-		0x748f82ee, 0x78a5636f, 0x84c87814, 0x8cc70208, 0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2
-	];
+function sha224(inputString) {
+    // Internal constants and functions
+    const constantsK = [
+        0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5, 0x3956c25b, 0x59f111f1, 0x923f82a4, 0xab1c5ed5,
+        0xd807aa98, 0x12835b01, 0x243185be, 0x550c7dc3, 0x72be5d74, 0x80deb1fe, 0x9bdc06a7, 0xc19bf174,
+        0xe49b69c1, 0xefbe4786, 0x0fc19dc6, 0x240ca1cc, 0x2de92c6f, 0x4a7484aa, 0x5cb0a9dc, 0x76f988da,
+        0x983e5152, 0xa831c66d, 0xb00327c8, 0xbf597fc7, 0xc6e00bf3, 0xd5a79147, 0x06ca6351, 0x14292967,
+        0x27b70a85, 0x2e1b2138, 0x4d2c6dfc, 0x53380d13, 0x650a7354, 0x766a0abb, 0x81c2c92e, 0x92722c85,
+        0xa2bfe8a1, 0xa81a664b, 0xc24b8b70, 0xc76c51a3, 0xd192e819, 0xd6990624, 0xf40e3585, 0x106aa070,
+        0x19a4c116, 0x1e376c08, 0x2748774c, 0x34b0bcb5, 0x391c0cb3, 0x4ed8aa4a, 0x5b9cca4f, 0x682e6ff3,
+        0x748f82ee, 0x78a5636f, 0x84c87814, 0x8cc70208, 0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2
+    ];
 
-	function utf8编码(字符串) {
-		return unescape(encodeURIComponent(字符串));
-	}
+    function utf8Encode(string) {
+        return unescape(encodeURIComponent(string));
+    }
 
-	function 字节转十六进制(字节数组) {
-		let 十六进制 = '';
-		for (let i = 0; i < 字节数组.length; i++) {
-			十六进制 += ((字节数组[i] >>> 4) & 0x0F).toString(16);
-			十六进制 += (字节数组[i] & 0x0F).toString(16);
-		}
-		return 十六进制;
-	}
+    function bytesToHex(byteArray) {
+        let hex = '';
+        for (let i = 0; i < byteArray.length; i++) {
+            hex += ((byteArray[i] >>> 4) & 0x0F).toString(16);
+            hex += (byteArray[i] & 0x0F).toString(16);
+        }
+        return hex;
+    }
 
-	function sha224核心(输入字符串) {
-		// SHA-224的初始哈希值
-		let 哈希值 = [
-			0xc1059ed8, 0x367cd507, 0x3070dd17, 0xf70e5939,
-			0xffc00b31, 0x68581511, 0x64f98fa7, 0xbefa4fa4
-		];
+    function sha224Core(inputString) {
+        // Initial hash value for SHA-224
+        let hash = [
+            0xc1059ed8, 0x367cd507, 0x3070dd17, 0xf70e5939,
+            0xffc00b31, 0x68581511, 0x64f98fa7, 0xbefa4fa4
+        ];
 
-		// 预处理
-		const 消息长度 = 输入字符串.length * 8;
-		输入字符串 += String.fromCharCode(0x80);
-		while ((输入字符串.length * 8) % 512 !== 448) {
-			输入字符串 += String.fromCharCode(0);
-		}
+        // Preprocessing
+        const messageLength = inputString.length * 8;
+        inputString += String.fromCharCode(0x80);
+        while ((inputString.length * 8) % 512 !== 448) {
+            inputString += String.fromCharCode(0);
+        }
 
-		// 64位消息长度
-		const 消息长度高位 = Math.floor(消息长度 / 0x100000000);
-		const 消息长度低位 = 消息长度 & 0xFFFFFFFF;
-		输入字符串 += String.fromCharCode(
-			(消息长度高位 >>> 24) & 0xFF, (消息长度高位 >>> 16) & 0xFF,
-			(消息长度高位 >>> 8) & 0xFF, 消息长度高位 & 0xFF,
-			(消息长度低位 >>> 24) & 0xFF, (消息长度低位 >>> 16) & 0xFF,
-			(消息长度低位 >>> 8) & 0xFF, 消息长度低位 & 0xFF
-		);
+        // 64-bit message length
+        const messageLengthHigh = Math.floor(messageLength / 0x100000000);
+        const messageLengthLow = messageLength & 0xFFFFFFFF;
+        inputString += String.fromCharCode(
+            (messageLengthHigh >>> 24) & 0xFF, (messageLengthHigh >>> 16) & 0xFF,
+            (messageLengthHigh >>> 8) & 0xFF, messageLengthHigh & 0xFF,
+            (messageLengthLow >>> 24) & 0xFF, (messageLengthLow >>> 16) & 0xFF,
+            (messageLengthLow >>> 8) & 0xFF, messageLengthLow & 0xFF
+        );
 
-		const 字数组 = [];
-		for (let i = 0; i < 输入字符串.length; i += 4) {
-			字数组.push(
-				(输入字符串.charCodeAt(i) << 24) |
-				(输入字符串.charCodeAt(i + 1) << 16) |
-				(输入字符串.charCodeAt(i + 2) << 8) |
-				输入字符串.charCodeAt(i + 3)
-			);
-		}
+        const wordArray = [];
+        for (let i = 0; i < inputString.length; i += 4) {
+            wordArray.push(
+                (inputString.charCodeAt(i) << 24) |
+                (inputString.charCodeAt(i + 1) << 16) |
+                (inputString.charCodeAt(i + 2) << 8) |
+                inputString.charCodeAt(i + 3)
+            );
+        }
 
-		// 主要压缩循环
-		for (let i = 0; i < 字数组.length; i += 16) {
-			const w = new Array(64).fill(0);
-			for (let j = 0; j < 16; j++) {
-				w[j] = 字数组[i + j];
-			}
+        // Main compression loop
+        for (let i = 0; i < wordArray.length; i += 16) {
+            const w = new Array(64).fill(0);
+            for (let j = 0; j < 16; j++) {
+                w[j] = wordArray[i + j];
+            }
 
-			for (let j = 16; j < 64; j++) {
-				const s0 = 右旋转(w[j-15], 7) ^ 右旋转(w[j-15], 18) ^ (w[j-15] >>> 3);
-				const s1 = 右旋转(w[j-2], 17) ^ 右旋转(w[j-2], 19) ^ (w[j-2] >>> 10);
-				w[j] = (w[j-16] + s0 + w[j-7] + s1) >>> 0;
-			}
+            for (let j = 16; j < 64; j++) {
+                const s0 = rightRotate(w[j - 15], 7) ^ rightRotate(w[j - 15], 18) ^ (w[j - 15] >>> 3);
+                const s1 = rightRotate(w[j - 2], 17) ^ rightRotate(w[j - 2], 19) ^ (w[j - 2] >>> 10);
+                w[j] = (w[j - 16] + s0 + w[j - 7] + s1) >>> 0;
+            }
 
-			let [a, b, c, d, e, f, g, h0] = 哈希值;
+            let [a, b, c, d, e, f, g, h0] = hash;
 
-			for (let j = 0; j < 64; j++) {
-				const S1 = 右旋转(e, 6) ^ 右旋转(e, 11) ^ 右旋转(e, 25);
-				const ch = (e & f) ^ (~e & g);
-				const temp1 = (h0 + S1 + ch + 常量K[j] + w[j]) >>> 0;
-				const S0 = 右旋转(a, 2) ^ 右旋转(a, 13) ^ 右旋转(a, 22);
-				const maj = (a & b) ^ (a & c) ^ (b & c);
-				const temp2 = (S0 + maj) >>> 0;
+            for (let j = 0; j < 64; j++) {
+                const S1 = rightRotate(e, 6) ^ rightRotate(e, 11) ^ rightRotate(e, 25);
+                const ch = (e & f) ^ (~e & g);
+                const temp1 = (h0 + S1 + ch + constantsK[j] + w[j]) >>> 0;
+                const S0 = rightRotate(a, 2) ^ rightRotate(a, 13) ^ rightRotate(a, 22);
+                const maj = (a & b) ^ (a & c) ^ (b & c);
+                const temp2 = (S0 + maj) >>> 0;
 
-				h0 = g;
-				g = f;
-				f = e;
-				e = (d + temp1) >>> 0;
-				d = c;
-				c = b;
-				b = a;
-				a = (temp1 + temp2) >>> 0;
-			}
+                h0 = g;
+                g = f;
+                f = e;
+                e = (d + temp1) >>> 0;
+                d = c;
+                c = b;
+                b = a;
+                a = (temp1 + temp2) >>> 0;
+            }
 
-			哈希值[0] = (哈希值[0] + a) >>> 0;
-			哈希值[1] = (哈希值[1] + b) >>> 0;
-			哈希值[2] = (哈希值[2] + c) >>> 0;
-			哈希值[3] = (哈希值[3] + d) >>> 0;
-			哈希值[4] = (哈希值[4] + e) >>> 0;
-			哈希值[5] = (哈希值[5] + f) >>> 0;
-			哈希值[6] = (哈希值[6] + g) >>> 0;
-			哈希值[7] = (哈希值[7] + h0) >>> 0;
-		}
+            hash[0] = (hash[0] + a) >>> 0;
+            hash[1] = (hash[1] + b) >>> 0;
+            hash[2] = (hash[2] + c) >>> 0;
+            hash[3] = (hash[3] + d) >>> 0;
+            hash[4] = (hash[4] + e) >>> 0;
+            hash[5] = (hash[5] + f) >>> 0;
+            hash[6] = (hash[6] + g) >>> 0;
+            hash[7] = (hash[7] + h0) >>> 0;
+        }
 
-		// 截断到224位
-		return 哈希值.slice(0, 7);
-	}
+        // Truncate to 224 bits
+        return hash.slice(0, 7);
+    }
 
-	function 右旋转(数值, 位数) {
-		return ((数值 >>> 位数) | (数值 << (32 - 位数))) >>> 0;
-	}
+    function rightRotate(value, bits) {
+        return ((value >>> bits) | (value << (32 - bits))) >>> 0;
+    }
 
-	// 主函数逻辑
-	const 编码输入 = utf8编码(输入字符串);
-	const 哈希结果 = sha224核心(编码输入);
-	
-	// 转换为十六进制字符串
-	return 字节转十六进制(
-		哈希结果.flatMap(h => [
-			(h >>> 24) & 0xFF, 
-			(h >>> 16) & 0xFF, 
-			(h >>> 8) & 0xFF, 
-			h & 0xFF
-		])
-	);
+    // Main function logic
+    const encodedInput = utf8Encode(inputString);
+    const hashResult = sha224Core(encodedInput);
+
+    // Convert to hexadecimal string
+    return bytesToHex(
+        hashResult.flatMap(h => [
+            (h >>> 24) & 0xFF,
+            (h >>> 16) & 0xFF,
+            (h >>> 8) & 0xFF,
+            h & 0xFF
+        ])
+    );
 }
