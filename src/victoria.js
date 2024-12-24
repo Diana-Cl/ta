@@ -1,8 +1,8 @@
 import { connect } from "cloudflare:sockets";
 
-let password = '';
-let proxyIP = '';
-let sub = '';
+let password = 'REvil';
+let proxyIP = 'nima.nscl.ir';
+let sub = 'Trojan.fxxk.dedyn.io';
 let subConverter = 'SUBAPI.fxxk.dedyn.io'; // Clash subscription conversion backend, currently using CM's subscription conversion function. Includes fake node information to prevent leakage.
 let subConfig = "https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/config/ACL4SSR_Online_Mini_MultiMode.ini"; // Subscription configuration file
 let subProtocol = 'https';
@@ -22,12 +22,24 @@ let go2Socks5s = [
     '*cloudatacdn.com',
     '*.loadshare.org',
 ];
-let addresses = [];
-let addressesapi = [];
+let addresses = [
+    	//  any Domain or clean IPv4/IPv6 addresses from cloudflare is usable, When sub is empty, the local preferred domain name/preferred IP is enabled. If the port number is not provided, the default TLS port is 443, and the alias after the # sign is a remark
+    	'zula.ir:443#TRAUMA¹',
+    	'fbi.gov:8443#TRAUMA²',
+    	'icook.hk:2053#TRAUMA³',
+    	'cdnjs.com:2083#TRAUMA⁴',
+    	'www.wto.org:2087#TRAUMA⁵',
+    	'go.inmobi.com:2096#TRAUMA⁶',
+    	'www.speedtest.net:443#TRAUMA⁷',
+    	'sky.rethinkdns.com:8443#TRAUMA⁸',
+    	'creativecommons.org:2053#TRAUMA⁹',
+];
+
+let addressesapi = 'https://raw.githubusercontent.com/NiREvil/Trauma/refs/heads/main/cleanIPs.txt';
 let addressescsv = [];
 let DLS = 8;
 let remarkIndex = 1; // Offset of the CSV comment column
-let FileName = 'epeius';
+let FileName = 'REvil';
 let BotToken = '';
 let ChatID = '';
 let proxyhosts = [];
