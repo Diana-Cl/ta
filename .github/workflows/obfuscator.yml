@@ -1,9 +1,9 @@
-name: Obfuscate and Commit
+name: Obfs and Cmt
 
 on:
     push:
-        paths:
-            - 'src/index.js'
+      paths:
+      - 'victoria.js'
     workflow_dispatch:
 
 jobs:
@@ -27,7 +27,7 @@ jobs:
 
       - name: Obfuscate code
         run: |
-          javascript-obfuscator src/index.js --output _worker.js \
+          javascript-obfuscator victoria.js --output _worker.js \
           --compact true \
           --control-flow-flattening true \
           --control-flow-flattening-threshold 1 \
