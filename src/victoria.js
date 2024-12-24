@@ -1,6 +1,6 @@
 import { connect } from "cloudflare:sockets";
 
-let password = '';
+let password = '1bb29cbb-460a-4543-bae0-ba15e5f620f3';
 let proxyIP = 'nima.nscl.ir';
 let sub = '';
 let subConverter = 'SUBAPI.fxxk.dedyn.io'; // Clash subscription conversion backend, currently using CM's subscription conversion function. Includes fake node information to prevent leakage.
@@ -22,7 +22,17 @@ let go2Socks5s = [
     '*cloudatacdn.com',
     '*.loadshare.org',
 ];
-let addresses = [];
+let addresses = [
+    'zula.ir:443#TRAUMA¹',
+    'fbi.gov:8443#TRAUMA²',
+    'icook.hk:2053#TRAUMA³',
+    'cdnjs.com:2083#TRAUMA⁴',
+    'www.wto.org:2087#TRAUMA⁵',
+    'go.inmobi.com:2096#TRAUMA⁶',
+    'www.speedtest.net:443#TRAUMA⁷',
+    'sky.rethinkdns.com:8443#TRAUMA⁸',
+    'creativecommons.org:2053#TRAUMA⁹',
+];
 
 let addressesapi = 'https://raw.githubusercontent.com/NiREvil/Trauma/refs/heads/main/cleanIPs.txt';
 let addressescsv = [];
@@ -38,7 +48,7 @@ let httpsPorts = ["2053", "2083", "2087", "2096", "8443"];
 let sha224Password;
 const regex = /^(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}|\[.*\]):?(\d+)?#?(.*)?$/;
 let proxyIPPool = [];
-let path = '/assets/image?ed=2560';
+let path = '/?ed=2560';
 export default {
     async fetch(request, env, ctx) {
         try {
