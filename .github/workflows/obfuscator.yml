@@ -3,7 +3,7 @@ name: Obfs and Cmt
 on:
     push:
       paths:
-      - 'victoria.js'
+      - 'src/victoria.js'
     workflow_dispatch:
 
 jobs:
@@ -27,7 +27,7 @@ jobs:
 
       - name: Obfuscate code
         run: |
-          javascript-obfuscator victoria.js --output _worker.js \
+          javascript-obfuscator src/victoria.js --output _worker.js \
           --compact true \
           --control-flow-flattening true \
           --control-flow-flattening-threshold 1 \
